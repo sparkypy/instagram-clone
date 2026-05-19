@@ -50,28 +50,28 @@ const registerController = asyncHandler(async (req, res) => {
 });
 
 const loginController = asyncHandler(async (req, res) => {
-  let { username, email, password } = req.body;
-  if (![username, email].some((ele) => typeof ele === "string" && ele.trim())) {
-    throw new ApiError(400, "Username or Email required");
+  let { identifier, password } = req.body;
+  if (typeof identifier !== "string" || !identifier.trim()) {
+    throw new ApiError(400, "Email or Username required");
   }
   if (typeof password !== "string" || !password.trim()) {
     throw new ApiError(400, "Password is required");
   }
 
-  if (username) username = username.trim().toLowerCase();
-  if (email) email = email.trim().toLowerCase();
+  identifier = identifier.trim().toLowerCase();
 
-  const query = username ? { username } : { email };
-
-  const user = await User.findOne(query);
+  const user = await User.findOne({
+    $or: [{ email: identifier }, { username: identifier }],
+  });
 
   if (!user) {
-    throw new ApiError(401, "Invalid credentials");
+    throw new ApiError(401, "Invalid Credentials");
   }
 
   const isMatch = await user.comparePassword(password);
+
   if (!isMatch) {
-    throw new ApiError(401, "Invalid credentials");
+    throw new ApiError(401, "Invalid Credentials");
   }
 
   const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
@@ -84,7 +84,7 @@ const loginController = asyncHandler(async (req, res) => {
   delete userObj.password;
 
   return res.status(200).json({
-    message: "Logged in",
+    message: "Logged In",
     user: userObj,
   });
 });

@@ -2,16 +2,16 @@ import { useState } from "react";
 import { registerUser } from "../../../services/authService.js";
 import { useOutletContext } from "react-router-dom";
 import { validateFields } from "../../../utils/validators/fieldValidate.js";
-
 import {
   buttonStyles,
   inputStyles,
   labelStyles,
   errorStyles,
 } from "../../../styles/classes.js";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 export const Register = () => {
+  const { showToast } = useOutletContext();
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -19,11 +19,15 @@ export const Register = () => {
     confirmPassword: "",
   });
 
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState({
+    username: "",
+    email: "",
+    confirmPassword: "",
+    password: "",
+  });
 
   const [loading, setLoading] = useState(false);
 
-  const { showToast } = useOutletContext();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -59,15 +63,15 @@ export const Register = () => {
       showToast({
         type: "error",
         heading: "Validation Error",
-        message: "Passwords do not match.",
+        message: "Passwords do not match",
       });
       return;
     }
     setLoading(true);
     try {
       const data = await registerUser({
-        username: formData.username,
-        email: formData.email,
+        username: formData.username.trim().toLowerCase(),
+        email: formData.email.trim().toLowerCase(),
         password: formData.password,
       });
       setFormData({

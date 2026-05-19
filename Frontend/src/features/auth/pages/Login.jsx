@@ -5,47 +5,77 @@ import {
   labelStyles,
   errorStyles,
 } from "../../../styles/classes.js";
-
 import { loginUser } from "../../../services/authService.js";
+import { validateFields } from "../../../utils/validators/fieldValidate.js";
+import { useOutletContext } from "react-router-dom";
 import { Link } from "react-router-dom";
 
 export const Login = () => {
-  const [username, setUsername] = useState("");
-  const [usernameError, setUsernameError] = useState("");
+  const { showToast } = useOutletContext();
 
-  const [password, setPassword] = useState("");
-  const [passwordError, setPasswordError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const usernameRegex = /^[a-z0-9_]+$/;
+  const [formData, setFormData] = useState({
+    identifier: "",
+    password: "",
+  });
 
-  const isFormValid = username && password && !usernameError && !passwordError;
+  const [errors, setErrors] = useState({
+    identifier: "",
+    password: "",
+  });
 
-  const handleUsernameValidation = (e) => {
-    const value = e.target.value;
-    setUsername(value);
+  const handleChange = (e) => {
+    const { name, value } = e.target;
 
-    if (!value) {
-      setUsernameError("Username is required");
-    } else if (!usernameRegex.test(value)) {
-      setUsernameError(
-        "Username can only consist of lowercase letters, underscores, & numbers",
-      );
-    } else if (value.length < 3) {
-      setUsernameError("Username's length should be at least 3 characters");
-    } else {
-      setUsernameError("");
-    }
+    const updatedFormData = {
+      ...formData,
+      [name]: value,
+    };
+
+    setFormData(updatedFormData);
+
+    const error = validateFields(name, value, updatedFormData);
+
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      [name]: error,
+    }));
   };
 
-  const handlePasswordValidation = (e) => {
-    const value = e.target.value;
-    setPassword(value);
-    if (!value) {
-      setPasswordError("Password is required");
-    } else if (value.length < 6) {
-      setPasswordError("Password length's should be at least 6 characters");
-    } else {
-      setPasswordError("");
+  const isFormValid =
+    formData.identifier &&
+    formData.password &&
+    !errors.identifier &&
+    !errors.password;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const data = await loginUser({
+        identifier: formData.identifier.trim().toLowerCase(),
+        password: formData.password,
+      });
+      setFormData({
+        identifier: "",
+        password: "",
+      });
+      showToast({
+        type: "success",
+        heading: "Login Successful",
+        message: "You're now logged in.",
+      });
+      console.log(data);
+    } catch (error) {
+      const message = error?.response?.data?.message || "Something went wrong";
+      showToast({
+        type: "error",
+        heading: "Login Failed",
+        message,
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -64,23 +94,24 @@ export const Login = () => {
 
       {/* Form */}
       <form
+        onSubmit={handleSubmit}
         className="flex flex-col gap-3 sm:gap-4 md:gap-5"
-        autocomplete="off"
+        autoComplete="off"
       >
         {/* Username */}
         <div className="flex flex-col gap-2">
-          <label className={labelStyles}>Username</label>
+          <label className={labelStyles}>Email or Username</label>
 
           <input
             type="text"
-            name="username"
-            placeholder="Enter your username"
+            name="identifier"
+            placeholder="Enter your email or username"
             className={inputStyles}
-            value={username}
-            onChange={handleUsernameValidation}
+            value={formData.identifier}
+            onChange={handleChange}
           />
 
-          <p className={errorStyles}>{usernameError}</p>
+          <p className={errorStyles}>{errors.identifier}</p>
         </div>
 
         {/* Password */}
@@ -92,16 +123,20 @@ export const Login = () => {
             name="password"
             placeholder="Enter your password"
             className={inputStyles}
-            value={password}
-            onChange={handlePasswordValidation}
+            value={formData.password}
+            onChange={handleChange}
           />
 
-          <p className={errorStyles}>{passwordError}</p>
+          <p className={errorStyles}>{errors.password}</p>
         </div>
 
         {/* Button */}
-        <button type="submit" className={buttonStyles} disabled={!isFormValid}>
-          Sign In
+        <button
+          type="submit"
+          className={buttonStyles}
+          disabled={!isFormValid || loading}
+        >
+          {loading ? "Signing In..." : "Sign In"}
         </button>
       </form>
 
