@@ -1,6 +1,6 @@
-import { Outlet } from "react-router";
+import { Outlet } from "react-router-dom";
 import { useState } from "react";
-import { Toast } from "./ui/Toast";
+import { Toast } from "./components/ui/Toast";
 
 export const App = () => {
   const [toast, setToast] = useState(null);

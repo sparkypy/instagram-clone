@@ -7,7 +7,7 @@ import {
 } from "../../../styles/classes.js";
 
 import { loginUser } from "../../../services/authService.js";
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 
 export const Login = () => {
   const [username, setUsername] = useState("");

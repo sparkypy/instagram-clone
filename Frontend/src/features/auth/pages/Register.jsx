@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { registerUser } from "../../../services/authService.js";
-import { useOutletContext } from "react-router";
+import { useOutletContext } from "react-router-dom";
+import { validateFields } from "../../../utils/validators/fieldValidate.js";
 
 import {
   buttonStyles,
@@ -8,114 +9,73 @@ import {
   labelStyles,
   errorStyles,
 } from "../../../styles/classes.js";
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 
 export const Register = () => {
-  const [username, setUsername] = useState("");
-  const [usernameError, setUsernameError] = useState("");
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
 
-  const [email, setEmail] = useState("");
-  const [emailError, setEmailError] = useState("");
-
-  const [password, setPassword] = useState("");
-  const [passwordError, setPasswordError] = useState("");
-
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+  const [errors, setErrors] = useState({});
 
   const [loading, setLoading] = useState(false);
 
-  const usernameRegex = /^[a-z0-9_]+$/;
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
   const { showToast } = useOutletContext();
 
-  const handleUsernameValidation = (e) => {
-    const value = e.target.value;
+  const handleChange = (e) => {
+    const { name, value } = e.target;
 
-    setUsername(value);
+    const updatedFormData = {
+      ...formData,
+      [name]: value,
+    };
 
-    if (!value) {
-      setUsernameError("Username is required");
-    } else if (!usernameRegex.test(value)) {
-      setUsernameError(
-        "Username can only consist of lowercase letters, underscores & numbers",
-      );
-    } else if (value.length < 3) {
-      setUsernameError("Username length should be at least 3 characters");
-    } else {
-      setUsernameError("");
-    }
-  };
+    setFormData(updatedFormData);
 
-  const handleEmailValidation = (e) => {
-    const value = e.target.value;
+    const error = validateFields(name, value, updatedFormData);
 
-    setEmail(value);
-
-    if (!value) {
-      setEmailError("Email is required");
-    } else if (!emailRegex.test(value)) {
-      setEmailError("Invalid email address");
-    } else {
-      setEmailError("");
-    }
-  };
-
-  const handlePasswordValidation = (e) => {
-    const value = e.target.value;
-
-    setPassword(value);
-
-    if (!value) {
-      setPasswordError("Password is required");
-    } else if (value.length < 6) {
-      setPasswordError("Password length should be at least 6 characters");
-    } else {
-      setPasswordError("");
-    }
-
-    if (confirmPassword && value !== confirmPassword) {
-      setConfirmPasswordError("Passwords do not match");
-    } else {
-      setConfirmPasswordError("");
-    }
-  };
-
-  const handleConfirmPasswordValidation = (e) => {
-    const value = e.target.value;
-
-    setConfirmPassword(value);
-
-    if (!value) {
-      setConfirmPasswordError("Please confirm your password");
-    } else if (value !== password) {
-      setConfirmPasswordError("Passwords do not match");
-    } else {
-      setConfirmPasswordError("");
-    }
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      [name]: error,
+    }));
   };
 
   const isFormValid =
-    username &&
-    email &&
-    password &&
-    confirmPassword &&
-    !usernameError &&
-    !emailError &&
-    !passwordError &&
-    !confirmPasswordError;
+    formData.username &&
+    formData.email &&
+    formData.password &&
+    formData.confirmPassword &&
+    !errors.username &&
+    !errors.email &&
+    !errors.password &&
+    !errors.confirmPassword;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    if (formData.password !== formData.confirmPassword) {
+      showToast({
+        type: "error",
+        heading: "Validation Error",
+        message: "Passwords do not match.",
+      });
+      return;
+    }
     setLoading(true);
     try {
-      const data = await registerUser({ username, email, password });
-      setUsername("");
-      setEmail("");
-      setPassword("");
-      setConfirmPassword("");
+      const data = await registerUser({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+      });
+      setFormData({
+        username: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      });
       showToast({
         type: "success",
         heading: "Registration Successful",
@@ -160,11 +120,11 @@ export const Register = () => {
             name="username"
             placeholder="Enter your username"
             className={inputStyles}
-            value={username}
-            onChange={handleUsernameValidation}
+            value={formData.username}
+            onChange={handleChange}
           />
 
-          <p className={errorStyles}>{usernameError}</p>
+          <p className={errorStyles}>{errors.username}</p>
         </div>
 
         {/* Email */}
@@ -176,11 +136,11 @@ export const Register = () => {
             name="email"
             placeholder="Enter your email"
             className={inputStyles}
-            value={email}
-            onChange={handleEmailValidation}
+            value={formData.email}
+            onChange={handleChange}
           />
 
-          <p className={errorStyles}>{emailError}</p>
+          <p className={errorStyles}>{errors.email}</p>
         </div>
 
         {/* Password */}
@@ -192,11 +152,11 @@ export const Register = () => {
             name="password"
             placeholder="Enter your password"
             className={inputStyles}
-            value={password}
-            onChange={handlePasswordValidation}
+            value={formData.password}
+            onChange={handleChange}
           />
 
-          <p className={errorStyles}>{passwordError}</p>
+          <p className={errorStyles}>{errors.password}</p>
         </div>
 
         {/* Confirm Password */}
@@ -208,11 +168,11 @@ export const Register = () => {
             name="confirmPassword"
             placeholder="Confirm your password"
             className={inputStyles}
-            value={confirmPassword}
-            onChange={handleConfirmPasswordValidation}
+            value={formData.confirmPassword}
+            onChange={handleChange}
           />
 
-          <p className={errorStyles}>{confirmPasswordError}</p>
+          <p className={errorStyles}>{errors.confirmPassword}</p>
         </div>
 
         {/* Button */}
