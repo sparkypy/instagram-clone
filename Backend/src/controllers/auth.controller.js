@@ -89,4 +89,11 @@ const loginController = asyncHandler(async (req, res) => {
   });
 });
 
-export { registerController, loginController };
+const getCurrentUser = asyncHandler(async (req, res) => {
+  return res.status(200).json({
+    success: true,
+    user: req.user,
+  });
+});
+
+export { registerController, loginController, getCurrentUser };
