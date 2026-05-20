@@ -5,13 +5,13 @@ import {
   labelStyles,
   errorStyles,
 } from "../../../styles/classes.js";
-import { loginUser } from "../../../services/authService.js";
 import { validateFields } from "../../../utils/validators/fieldValidate.js";
 import { useOutletContext } from "react-router-dom";
 import { Link } from "react-router-dom";
-
+import { useAuth } from "../../../context/AuthContext.jsx";
 
 export const Login = () => {
+  const { login } = useAuth();
   const { showToast } = useOutletContext();
 
   const [loading, setLoading] = useState(false);
@@ -54,7 +54,7 @@ export const Login = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const data = await loginUser({
+      await login({
         identifier: formData.identifier.trim().toLowerCase(),
         password: formData.password,
       });
@@ -67,7 +67,6 @@ export const Login = () => {
         heading: "Login Successful",
         message: "You're now logged in.",
       });
-      console.log(data);
     } catch (error) {
       const message = error?.response?.data?.message || "Something went wrong";
       showToast({

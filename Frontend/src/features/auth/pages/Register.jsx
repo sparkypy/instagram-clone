@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { registerUser } from "../../../services/authService.js";
 import { useOutletContext } from "react-router-dom";
 import { validateFields } from "../../../utils/validators/fieldValidate.js";
 import {
@@ -9,8 +8,10 @@ import {
   errorStyles,
 } from "../../../styles/classes.js";
 import { Link } from "react-router";
+import { useAuth } from "../../../context/AuthContext.jsx";
 
 export const Register = () => {
+  const { register } = useAuth();
   const { showToast } = useOutletContext();
   const [formData, setFormData] = useState({
     username: "",
@@ -68,7 +69,7 @@ export const Register = () => {
     }
     setLoading(true);
     try {
-      const data = await registerUser({
+      await register({
         username: formData.username.trim().toLowerCase(),
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
@@ -84,7 +85,6 @@ export const Register = () => {
         heading: "Registration Successful",
         message: "Your account has been created successfully.",
       });
-      console.log(data);
     } catch (error) {
       const message = error?.response?.data?.message || "Something went wrong";
       showToast({

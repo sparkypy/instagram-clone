@@ -1,5 +1,9 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { api } from "../lib/axios";
+import {
+  loginUser,
+  registerUser,
+  getCurrentUser,
+} from "../services/authService";
 
 const AuthContext = createContext();
 
@@ -7,11 +11,23 @@ export const AuthContextProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const getCurrentUser = async () => {
+  const login = async (credentials) => {
+    const data = await loginUser(credentials);
+    setUser(data.user);
+    return data;
+  };
+
+  const register = async (credentials) => {
+    const data = await registerUser(credentials);
+    setUser(data.user);
+    return data;
+  };
+
+  const hydrateUser = async () => {
     try {
-      const response = await api.get("/api/auth/me");
-      setUser(response.data.user);
-    } catch (error) {
+      const data = await getCurrentUser();
+      setUser(data.user);
+    } catch (err) {
       setUser(null);
     } finally {
       setLoading(false);
@@ -19,15 +35,16 @@ export const AuthContextProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    getCurrentUser();
+    hydrateUser();
   }, []);
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        setUser,
         loading,
+        login,
+        register,
         isAuthenticated: !!user, // converts object -> true; null -> false
       }}
     >
