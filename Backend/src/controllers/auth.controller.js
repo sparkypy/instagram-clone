@@ -10,7 +10,7 @@ const cookieOptions = {
 };
 
 const registerController = asyncHandler(async (req, res) => {
-  let { username, email, password, bio, profileImage } = req.body;
+  let { username, email, password } = req.body;
   if (
     ![username, email, password].every(
       (ele) => typeof ele === "string" && ele.trim(),
@@ -24,8 +24,6 @@ const registerController = asyncHandler(async (req, res) => {
     username,
     email,
     password,
-    bio,
-    profileImage,
   });
 
   const token = jwt.sign(
