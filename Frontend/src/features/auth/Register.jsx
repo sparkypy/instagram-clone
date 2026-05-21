@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { useOutletContext } from "react-router-dom";
-import { validateFields } from "../../../utils/validators/fieldValidate.js";
+import { validateFields } from "../../utils/validators/fieldValidate.js";
 import {
   buttonStyles,
   inputStyles,
   labelStyles,
   errorStyles,
-} from "../../../styles/classes.js";
+} from "../../styles/classes.js";
 import { Link } from "react-router";
-import { useAuth } from "../../../context/AuthContext.jsx";
+import { useAuth } from "../../context/AuthContext.jsx";
 
 export const Register = () => {
   const { register } = useAuth();

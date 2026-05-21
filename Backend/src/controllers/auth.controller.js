@@ -94,4 +94,18 @@ const getCurrentUser = asyncHandler(async (req, res) => {
   });
 });
 
-export { registerController, loginController, getCurrentUser };
+const logoutController = asyncHandler(async (req, res) => {
+  res.clearCookie("token", cookieOptions);
+
+  return res.status(200).json({
+    success: true,
+    message: "Logged out successfully",
+  });
+});
+
+export {
+  registerController,
+  loginController,
+  getCurrentUser,
+  logoutController,
+};

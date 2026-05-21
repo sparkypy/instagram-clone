@@ -3,6 +3,7 @@ import {
   loginUser,
   registerUser,
   getCurrentUser,
+  logoutUser,
 } from "../services/authService";
 
 const AuthContext = createContext();
@@ -21,6 +22,15 @@ export const AuthContextProvider = ({ children }) => {
     const data = await registerUser(credentials);
     setUser(data.user);
     return data;
+  };
+
+  const logout = async () => {
+    try {
+      await logoutUser();
+      setUser(null);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const hydrateUser = async () => {
@@ -45,6 +55,7 @@ export const AuthContextProvider = ({ children }) => {
         loading,
         login,
         register,
+        logout,
         isAuthenticated: !!user, // converts object -> true; null -> false
       }}
     >

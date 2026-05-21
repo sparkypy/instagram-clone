@@ -3,6 +3,7 @@ import {
   getCurrentUser,
   loginController,
   registerController,
+  logoutController,
 } from "../controllers/auth.controller.js";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
 
@@ -16,5 +17,8 @@ authRouter.post("/login", loginController);
 
 // GET /api/auth/me
 authRouter.get("/me", authMiddleware, getCurrentUser);
+
+// Post /api/auth/logout
+authRouter.post("/logout", authMiddleware, logoutController);
 
 export { authRouter };
