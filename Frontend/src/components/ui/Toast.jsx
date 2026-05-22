@@ -70,7 +70,8 @@ export const Toast = ({
     <div
       className={`
         fixed top-5 right-5 z-50
-        w-90
+        w-75
+        sm:w-90
         overflow-hidden
         rounded-3xl
 

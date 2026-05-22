@@ -169,7 +169,7 @@ export const Profile = () => {
                 "
               >
                 <p className="text-2xl font-bold text-white">
-                  {profile.followers.length}
+                  0
                 </p>
 
                 <p className="mt-1 text-xs uppercase tracking-widest text-zinc-400">
@@ -190,7 +190,7 @@ export const Profile = () => {
                 "
               >
                 <p className="text-2xl font-bold text-white">
-                  {profile.following.length}
+                  0
                 </p>
 
                 <p className="mt-1 text-xs uppercase tracking-widest text-zinc-400">
