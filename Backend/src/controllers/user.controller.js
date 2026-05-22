@@ -70,6 +70,19 @@ const unfollowUserController = asyncHandler(async (req, res) => {
   });
 });
 
+const getUserProfileController = asyncHandler(async (req, res) => {
+  const { username } = req.params;
+  const user = await User.findOne({
+    username,
+  }).select("-password");
+  if (!user) {
+    throw new ApiError(401, "User not found");
+  }
+  return res.status(200).json({
+    success: true,
+    user,
+  });
+});
 
+export { followUserController, unfollowUserController, getUserProfileController };
 
-export { followUserController, unfollowUserController};

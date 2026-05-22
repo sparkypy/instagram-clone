@@ -31,11 +31,24 @@ const userSchema = new mongoose.Schema(
     },
     bio: {
       type: String,
+      default: "",
     },
     profileImage: {
       type: String,
       default: "https://ik.imagekit.io/sparkylynx/user-silhouette.jpg",
     },
+    followers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    following: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   { timestamps: true },
 );
