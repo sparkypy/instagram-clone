@@ -1,3 +1,8 @@
+/*
+This is just a dummy Profile.
+There are tons of ammendments to be done.
+*/
+
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
