@@ -6,12 +6,11 @@ import {
   errorStyles,
 } from "../../styles/classes.js";
 import { validateFields } from "../../utils/validators/fieldValidate.js";
-import { useOutletContext, useNavigate } from "react-router-dom";
+import { useOutletContext } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext.jsx";
 
 export const Login = () => {
-  const navigate = useNavigate();
   const { login } = useAuth();
   const { showToast } = useOutletContext();
 
@@ -59,8 +58,6 @@ export const Login = () => {
         identifier: formData.identifier.trim().toLowerCase(),
         password: formData.password,
       });
-
-      navigate("/profile");
 
       setFormData({
         identifier: "",

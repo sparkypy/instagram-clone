@@ -19,7 +19,7 @@ export const routes = createBrowserRouter([
         element: <Register />,
       },
       {
-        path: "/profile",
+        path: "/profile/:username",
         element: (
           <ProtectedRoute>
             <Profile />
