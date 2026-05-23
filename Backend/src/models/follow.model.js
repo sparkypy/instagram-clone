@@ -19,11 +19,10 @@ followSchema.index({ follower: 1 });
 followSchema.index({ following: 1 });
 followSchema.index({ follower: 1, following: 1 }, { unique: true });
 
-followSchema.pre("save", function (next) {
+followSchema.pre("save", function () {
   if (this.follower.toString() === this.following.toString()) {
     return next(new Error("Users cannot follow themselves"));
   }
-  next();
 });
 
 export const Follow = mongoose.model("Follow", followSchema);
