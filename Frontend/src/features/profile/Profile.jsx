@@ -5,10 +5,11 @@ There are tons of ammendments to be done.
 
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-
 import { getUserProfile } from "../../services/userService";
+import { useAuth } from "../../context/AuthContext";
 
 export const Profile = () => {
+  const { user } = useAuth();
   const { username } = useParams();
 
   const [profile, setProfile] = useState(null);
@@ -18,12 +19,9 @@ export const Profile = () => {
   const fetchProfile = async () => {
     try {
       const data = await getUserProfile(username);
-
       setProfile(data.user);
     } catch (error) {
-      setError(
-        error?.response?.data?.message || "Failed to fetch profile",
-      );
+      setError(error?.response?.data?.message || "Failed to fetch profile");
     } finally {
       setLoading(false);
     }
@@ -62,6 +60,8 @@ export const Profile = () => {
       </div>
     );
   }
+
+  const isOwnProfile = user?._id === profile._id;
 
   return (
     <div className="relative w-full overflow-hidden px-4 py-8 sm:px-6 lg:px-10 rounded-4xl">
@@ -151,6 +151,20 @@ export const Profile = () => {
                 >
                   {profile.bio || "No bio yet."}
                 </p>
+
+                {!isOwnProfile && (
+                  <button
+                    className="
+                    mt-5
+                    rounded-xl
+                  bg-purple-500
+                    px-5
+                    py-2
+                  "
+                  >
+                    {profile.isFollowing ? "Unfollow" : "Follow"}
+                  </button>
+                )}
               </div>
             </div>
 
@@ -169,7 +183,7 @@ export const Profile = () => {
                 "
               >
                 <p className="text-2xl font-bold text-white">
-                  0
+                  {profile.followerCount}
                 </p>
 
                 <p className="mt-1 text-xs uppercase tracking-widest text-zinc-400">
@@ -190,7 +204,7 @@ export const Profile = () => {
                 "
               >
                 <p className="text-2xl font-bold text-white">
-                  0
+                  {profile.followingCount}
                 </p>
 
                 <p className="mt-1 text-xs uppercase tracking-widest text-zinc-400">
@@ -214,9 +228,7 @@ export const Profile = () => {
               backdrop-blur-2xl
             "
           >
-            <h2 className="text-lg font-bold text-white">
-              About
-            </h2>
+            <h2 className="text-lg font-bold text-white">About</h2>
 
             <div className="mt-5 space-y-4">
               <div>
@@ -224,9 +236,7 @@ export const Profile = () => {
                   Username
                 </p>
 
-                <p className="mt-1 text-zinc-200">
-                  @{profile.username}
-                </p>
+                <p className="mt-1 text-zinc-200">@{profile.username}</p>
               </div>
 
               <div>
@@ -265,9 +275,7 @@ export const Profile = () => {
             "
           >
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-white">
-                Activity
-              </h2>
+              <h2 className="text-lg font-bold text-white">Activity</h2>
 
               <span
                 className="
@@ -296,8 +304,8 @@ export const Profile = () => {
               "
             >
               <p className="text-center text-sm text-zinc-500">
-                User posts, reels, comments and interactions
-                will appear here later.
+                User posts, reels, comments and interactions will appear here
+                later.
               </p>
             </div>
           </div>
