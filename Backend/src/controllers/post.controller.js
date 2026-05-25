@@ -87,11 +87,6 @@ const getFeedPostsController = asyncHandler(async (req, res) => {
       createdAt: -1,
     });
 
-  console.log("Number of ids: " + followingIds.length);
-  console.log(followingIds);
-  console.log("Number of posts: " + posts.length);
-  console.log("-----------------------------------------");
-
   return res.status(200).json({
     success: true,
     posts,

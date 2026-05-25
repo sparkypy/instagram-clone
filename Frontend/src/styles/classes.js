@@ -50,3 +50,19 @@ export const buttonStyles = `
   disabled:hover:scale-100
   disabled:hover:shadow-none
 `;
+
+export const loadingPageStyles = `
+  animate-pulse text-lg text-zinc-300
+`;
+
+export const errorPageStyles = `
+  rounded-2xl
+  border border-red-500/20
+  bg-red-500/10
+  px-6 py-4
+  text-sm
+  text-red-400
+  backdrop-blur-xl
+`;
+
+

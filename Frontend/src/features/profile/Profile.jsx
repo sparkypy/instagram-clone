@@ -1,27 +1,42 @@
-/*
-This is just a dummy Profile.
-There are tons of ammendments to be done.
-*/
-
 import { useEffect, useState } from "react";
 import { useOutletContext, useParams } from "react-router-dom";
-import { getUserProfile } from "../../services/userService";
 import { useAuth } from "../../context/AuthContext";
+import { getUserProfile } from "../../services/userService";
 import { followUser, unfollowUser } from "../../services/followService";
+import { loadingPageStyles, errorPageStyles } from "../../styles/classes";
 
 export const Profile = () => {
   const { showToast } = useOutletContext();
-  const { user, isAuthenticated } = useAuth();
+
+  const { user } = useAuth();
+
   const { username } = useParams();
 
   const [profile, setProfile] = useState(null);
+
   const [loading, setLoading] = useState(true);
+
   const [error, setError] = useState("");
+
   const [followLoading, setFollowLoading] = useState(false);
+
+  const statsCardStyles = `
+    min-w-28
+    rounded-3xl
+    border border-white/10
+    bg-white/5
+    px-5 py-4
+    text-center
+    backdrop-blur-xl
+    transition-all
+    duration-300
+    hover:bg-white/10
+  `;
 
   const handleFollowToggle = async () => {
     try {
       setFollowLoading(true);
+
       if (profile.isFollowing) {
         await unfollowUser(profile._id);
 
@@ -41,6 +56,7 @@ export const Profile = () => {
       }
     } catch (err) {
       console.log(err);
+
       showToast({
         type: "error",
         heading: "Action couldn't complete",
@@ -55,6 +71,7 @@ export const Profile = () => {
   const fetchProfile = async () => {
     try {
       const data = await getUserProfile(username);
+
       setProfile(data.user);
     } catch (error) {
       setError(error?.response?.data?.message || "Failed to fetch profile");
@@ -70,9 +87,7 @@ export const Profile = () => {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center px-4">
-        <div className="animate-pulse text-lg text-zinc-300">
-          Loading profile...
-        </div>
+        <div className={loadingPageStyles}>Loading profile...</div>
       </div>
     );
   }
@@ -80,19 +95,7 @@ export const Profile = () => {
   if (error) {
     return (
       <div className="flex min-h-screen items-center justify-center px-4">
-        <div
-          className="
-            rounded-2xl
-            border border-red-500/20
-            bg-red-500/10
-            px-6 py-4
-            text-sm
-            text-red-400
-            backdrop-blur-xl
-          "
-        >
-          {error}
-        </div>
+        <div className={errorPageStyles}>{error}</div>
       </div>
     );
   }
@@ -100,9 +103,10 @@ export const Profile = () => {
   const isOwnProfile = user?._id === profile._id;
 
   return (
-    <div className="relative w-full overflow-hidden px-4 py-8 sm:px-6 lg:px-10 rounded-4xl">
+    <div className="relative w-full overflow-hidden rounded-4xl px-4 py-8 sm:px-6 lg:px-10">
       {/* Glow Effects */}
       <div className="absolute -left-32 -top-32 h-72 w-72 rounded-full bg-purple-700/20 blur-3xl" />
+
       <div className="absolute -bottom-40 -right-40 h-80 w-80 rounded-full bg-fuchsia-600/20 blur-3xl" />
 
       <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-6">
@@ -122,15 +126,15 @@ export const Profile = () => {
             lg:p-10
           "
         >
-          {/* Top Gradient */}
+          {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(168,85,247,0.18),transparent_35%)]" />
 
-          <div className="relative flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+          <div className="relative flex flex-col gap-10 lg:flex-row lg:items-center lg:justify-between">
             {/* LEFT */}
             <div className="flex flex-col items-center gap-6 text-center lg:flex-row lg:text-left">
               {/* Avatar */}
               <div className="relative">
-                <div className="absolute inset-0 rounded-full  blur-2xl" />
+                <div className="absolute inset-0 rounded-full bg-purple-500/20 blur-2xl" />
 
                 <img
                   src={profile.profileImage}
@@ -152,7 +156,7 @@ export const Profile = () => {
               </div>
 
               {/* User Info */}
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div>
                   <h1
                     className="
@@ -163,14 +167,14 @@ export const Profile = () => {
                       text-3xl
                       font-black
                       text-transparent
-
+                      leading-normal
                       sm:text-5xl
                     "
                   >
                     @{profile.username}
                   </h1>
 
-                  <p className="mt-2 text-sm text-zinc-400 sm:text-base">
+                  <p className=" text-sm text-zinc-400 sm:text-base">
                     Digital Explorer • Community Member
                   </p>
                 </div>
@@ -187,73 +191,103 @@ export const Profile = () => {
                 >
                   {profile.bio || "No bio yet."}
                 </p>
-
-                {!isOwnProfile && (
-                  <button
-                    onClick={handleFollowToggle}
-                    disabled={followLoading}
-                    className="
-        mt-5
-        rounded-xl
-        bg-purple-500
-        px-5
-        py-2
-        disabled:opacity-50
-      "
-                  >
-                    {followLoading
-                      ? "Loading..."
-                      : profile.isFollowing
-                        ? "Unfollow"
-                        : "Follow"}
-                  </button>
-                )}
               </div>
             </div>
 
             {/* RIGHT */}
-            <div className="flex items-center justify-center gap-4 sm:gap-6">
-              {/* Followers */}
-              <div
-                className="
-                  min-w-27.5
-                  rounded-2xl
-                  border border-white/10
-                  bg-white/5
-                  px-5 py-4
-                  text-center
-                  backdrop-blur-xl
-                "
-              >
-                <p className="text-2xl font-bold text-white">
-                  {profile.followerCount}
-                </p>
+            <div className="flex flex-col items-center gap-5">
+              {/* Stats */}
+              <div className="flex items-center justify-center gap-4 sm:gap-6">
+                {/* Followers */}
+                <div className={statsCardStyles}>
+                  <p className="text-2xl font-bold text-white">
+                    {profile.followerCount}
+                  </p>
 
-                <p className="mt-1 text-xs uppercase tracking-widest text-zinc-400">
-                  Followers
-                </p>
+                  <p className="mt-1 text-xs uppercase tracking-widest text-zinc-400">
+                    Followers
+                  </p>
+                </div>
+
+                {/* Following */}
+                <div className={statsCardStyles}>
+                  <p className="text-2xl font-bold text-white">
+                    {profile.followingCount}
+                  </p>
+
+                  <p className="mt-1 text-xs uppercase tracking-widest text-zinc-400">
+                    Following
+                  </p>
+                </div>
               </div>
 
-              {/* Following */}
-              <div
-                className="
-                  min-w-27.5
-                  rounded-2xl
-                  border border-white/10
-                  bg-white/5
-                  px-5 py-4
-                  text-center
-                  backdrop-blur-xl
-                "
-              >
-                <p className="text-2xl font-bold text-white">
-                  {profile.followingCount}
-                </p>
+              {/* Follow Button */}
+              {!isOwnProfile && (
+                <button
+                  onClick={handleFollowToggle}
+                  disabled={followLoading}
+                  className={`
+                    group
+                    relative
+                    overflow-hidden
+                    rounded-2xl
+                    border
+                    px-8
+                    py-3
+                    text-sm
+                    font-semibold
+                    tracking-wide
+                    transition-all
+                    duration-300
 
-                <p className="mt-1 text-xs uppercase tracking-widest text-zinc-400">
-                  Following
-                </p>
-              </div>
+                    ${
+                      profile.isFollowing
+                        ? `
+                          border-white/10
+                          bg-white/5
+                          text-zinc-200
+                          hover:border-red-400/30
+                          hover:bg-red-500/10
+                          hover:text-red-300
+                        `
+                        : `
+                          border-purple-400/20
+                          bg-linear-to-r
+                          from-purple-600
+                          to-fuchsia-600
+                          text-white
+                          hover:scale-[1.03]
+                          hover:shadow-[0_0_35px_rgba(192,132,252,0.35)]
+                        `
+                    }
+
+                    disabled:cursor-not-allowed
+                    disabled:opacity-50
+                  `}
+                >
+                  <span className="relative z-10">
+                    {followLoading
+                      ? "Please wait..."
+                      : profile.isFollowing
+                        ? "Following"
+                        : "Follow"}
+                  </span>
+
+                  {!profile.isFollowing && (
+                    <div
+                      className="
+                        absolute
+                        inset-0
+                        translate-y-full
+                        bg-white/10
+                        transition-transform
+                        duration-300
+                        group-hover:translate-y-0
+                      "
+                    />
+                  )}
+                </button>
+              )}
             </div>
           </div>
         </div>

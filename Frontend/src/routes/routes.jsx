@@ -3,6 +3,8 @@ import { Login } from "../features/auth/Login";
 import { Register } from "../features/auth/Register";
 import { App } from "../App";
 import { Profile } from "../features/profile/Profile";
+import { ProtectedRoute } from "../components/auth/ProtectedRoute";
+import { Feed } from "../features/feed/Feed";
 
 export const routes = createBrowserRouter([
   {
@@ -19,8 +21,14 @@ export const routes = createBrowserRouter([
       },
       {
         path: "/profile/:username",
+        element: <Profile />,
+      },
+      {
+        path: "/feed",
         element: (
-            <Profile />
+          <ProtectedRoute>
+            <Feed />
+          </ProtectedRoute> 
         ),
       },
     ],
