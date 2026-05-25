@@ -1,28 +1,24 @@
 import express from "express";
-import { authMiddleware } from "../middlewares/auth.middleware.js";
 import {
+  getUserPostsController,
   createPostController,
-  getPostController,
-  getPostDetails,
-  likePostController,
+  deletePostController,
+  getFeedPostsController,
 } from "../controllers/post.controller.js";
-import multer from "multer";
-
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
+import { authMiddleware } from "../middlewares/auth.middleware.js";
 
 const postRouter = express.Router();
 
-// POST /api/posts/ [protected]
-postRouter.post("/", authMiddleware, upload.single("image"), createPostController);
+// POST /api/posts/
+postRouter.post("/", authMiddleware, createPostController);
 
-// GET /api/posts [protected]
-postRouter.get("/", authMiddleware, getPostController);
+// DELETE /api/posts/:postId
+postRouter.delete("/:postId", authMiddleware, deletePostController);
 
-// GET /api/posts/details/:postid
-postRouter.get("/details/:postid", authMiddleware, getPostDetails);
+// Get /api/posts/feed
+postRouter.get("/feed", authMiddleware, getFeedPostsController);
 
-// POST /api/posts/like/:postid
-postRouter.post("/like/:postid", authMiddleware, likePostController);
+// GET /api/posts/:username
+postRouter.get("/:username", getUserPostsController);
 
 export { postRouter };

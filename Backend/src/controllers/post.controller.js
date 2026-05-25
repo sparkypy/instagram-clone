@@ -1,103 +1,106 @@
+import mongoose, { mongo } from "mongoose";
 import { Post } from "../models/post.model.js";
-import { Like } from "../models/like.model.js";
-import ImageKit, { toFile } from "@imagekit/nodejs";
-import mongoose from "mongoose";
+import { User } from "../models/user.model.js";
+import { Follow } from "../models/follow.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 
-const imageKit = new ImageKit({
-  privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
-});
-
 const createPostController = asyncHandler(async (req, res) => {
-  if (!req.file) {
-    throw new ApiError(400, "No file uploaded");
+  const { content } = req.body;
+  if (typeof content !== "string" || !content.trim()) {
+    throw new ApiError(400, "Post content is required");
   }
-
-  const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
-  if (!allowedTypes.includes(req.file.mimetype)) {
-    throw new ApiError(400, "Invalid file type");
-  }
-
-  const uploadedFile = await imageKit.files.upload({
-    file: await toFile(req.file.buffer, req.file.originalname),
-    fileName: `${Date.now()}-${req.file.originalname}`,
-    folder: "ig_posts",
-  });
-
   const post = await Post.create({
-    caption: req.body.caption,
-    img_url: uploadedFile.url,
-    user: req.user._id,
+    content: content.trim(),
+    owner: req.user._id,
   });
 
   return res.status(201).json({
-    message: "Post Created",
+    success: true,
     post,
   });
 });
 
-const getPostController = asyncHandler(async (req, res) => {
-  const userId = req.user._id;
-  const posts = await Post.find({ user: userId });
+const deletePostController = asyncHandler(async (req, res) => {
+  const { postId } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(postId)) {
+    throw new ApiError(400, "Invalid post id");
+  }
+
+  const post = await Post.findById(postId);
+  if (!post) {
+    throw new ApiError(404, "Post not found");
+  }
+  // authorization ("are you allowed to do this?")
+  if (post.owner.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, "Unauthorized to delete this post");
+  }
+
+  await post.deleteOne();
 
   return res.status(200).json({
-    message: "Posts Fetched",
+    success: true,
+    message: "Post deleted successfully",
+  });
+});
+
+const getUserPostsController = asyncHandler(async (req, res) => {
+  const { username } = req.params;
+
+  const user = await User.findOne({
+    username,
+  });
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const posts = await Post.find({
+    owner: user._id,
+  }).sort({
+    createdAt: -1,
+  });
+
+  return res.status(200).json({
+    success: true,
     posts,
   });
 });
 
-const getPostDetails = asyncHandler(async (req, res) => {
-  const userId = req.user._id;
-  const postid = req.params.postid;
+const getFeedPostsController = asyncHandler(async (req, res) => {
+  const currentUserId = req.user._id;
 
-  if (!mongoose.Types.ObjectId.isValid(postid)) {
-    throw new ApiError(400, "Invalid post ID");
-  }
+  const following = await Follow.find({
+    follower: currentUserId,
+  }).select("following");
 
-  const post = await Post.findOne({
-    _id: postid,
-    user: userId,
-  });
+  const followingIds = following.map((follow) => follow.following);
+  followingIds.push(currentUserId);
 
-  if (!post) {
-    throw new ApiError(404, "Post not found");
-  }
+  const posts = await Post.find({
+    owner: {
+      $in: followingIds,
+    },
+  })
+    .populate("owner", "username profileImage")
+    .sort({
+      createdAt: -1,
+    });
+
+  console.log("Number of ids: " + followingIds.length);
+  console.log(followingIds);
+  console.log("Number of posts: " + posts.length);
+  console.log("-----------------------------------------");
 
   return res.status(200).json({
-    message: "Details Fetched",
-    post,
-  });
-});
-
-const likePostController = asyncHandler(async (req, res) => {
-  const userid = new mongoose.Types.ObjectId(req.user?._id);
-  const postid = req.params.postid;
-
-  // validating the post Id
-  if (!mongoose.Types.ObjectId.isValid(postid)) {
-    throw new ApiError(400, "Invalid post ID");
-  }
-
-  // Check if the post exists
-  const post = await Post.findById(postid);
-  if (!post) {
-    throw new ApiError(404, "Post not found");
-  }
-
-  // Check if the user has already liked the post
-  const existingLike = await Like.findOne({ user: userid, post: postid });
-  if (existingLike) {
-    throw new ApiError(400, "You have already liked this post");
-  }
-
-  const like = await Like.create({ user: userid, post: postid });
-
-  return res.status(201).json({
     success: true,
-    message: "Post liked successfully",
-    data: like,
+    posts,
   });
 });
 
-export { createPostController, getPostController, getPostDetails, likePostController };
+export {
+  createPostController,
+  deletePostController,
+  getUserPostsController,
+  getFeedPostsController,
+};

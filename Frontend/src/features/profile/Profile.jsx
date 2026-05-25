@@ -4,17 +4,53 @@ There are tons of ammendments to be done.
 */
 
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useOutletContext, useParams } from "react-router-dom";
 import { getUserProfile } from "../../services/userService";
 import { useAuth } from "../../context/AuthContext";
+import { followUser, unfollowUser } from "../../services/followService";
 
 export const Profile = () => {
-  const { user } = useAuth();
+  const { showToast } = useOutletContext();
+  const { user, isAuthenticated } = useAuth();
   const { username } = useParams();
 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [followLoading, setFollowLoading] = useState(false);
+
+  const handleFollowToggle = async () => {
+    try {
+      setFollowLoading(true);
+      if (profile.isFollowing) {
+        await unfollowUser(profile._id);
+
+        setProfile((prev) => ({
+          ...prev,
+          isFollowing: false,
+          followerCount: prev.followerCount - 1,
+        }));
+      } else {
+        await followUser(profile._id);
+
+        setProfile((prev) => ({
+          ...prev,
+          isFollowing: true,
+          followerCount: prev.followerCount + 1,
+        }));
+      }
+    } catch (err) {
+      console.log(err);
+      showToast({
+        type: "error",
+        heading: "Action couldn't complete",
+        message:
+          err?.response?.data?.message || "Something unexpected happened",
+      });
+    } finally {
+      setFollowLoading(false);
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -154,15 +190,22 @@ export const Profile = () => {
 
                 {!isOwnProfile && (
                   <button
+                    onClick={handleFollowToggle}
+                    disabled={followLoading}
                     className="
-                    mt-5
-                    rounded-xl
-                  bg-purple-500
-                    px-5
-                    py-2
-                  "
+        mt-5
+        rounded-xl
+        bg-purple-500
+        px-5
+        py-2
+        disabled:opacity-50
+      "
                   >
-                    {profile.isFollowing ? "Unfollow" : "Follow"}
+                    {followLoading
+                      ? "Loading..."
+                      : profile.isFollowing
+                        ? "Unfollow"
+                        : "Follow"}
                   </button>
                 )}
               </div>

@@ -2,22 +2,22 @@ import mongoose from "mongoose";
 
 const postSchema = new mongoose.Schema(
   {
-    caption: {
+    content: {
       type: String,
-      default: "",
       required: true,
+      trim: true,
+      maxlength: [500, "Post cannot exceed 500 characters"],
     },
-    img_url: {
-      type: String,
-      required: [true, "Image URL is missing"],
-    },
-    user: {
+
+    owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: [true, "User ID is requried"],
+      required: true,
     },
   },
   { timestamps: true },
 );
+
+postSchema.index({ owner: 1, createdAt: -1 });
 
 export const Post = mongoose.model("Post", postSchema);
