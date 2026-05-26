@@ -2,6 +2,7 @@ import mongoose, { mongo } from "mongoose";
 import { Post } from "../models/post.model.js";
 import { User } from "../models/user.model.js";
 import { Follow } from "../models/follow.model.js";
+import { Like } from "../models/like.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 
@@ -15,9 +16,15 @@ const createPostController = asyncHandler(async (req, res) => {
     owner: req.user._id,
   });
 
+  const populatedPost = await post.populate("owner", "username profileImage");
+
   return res.status(201).json({
     success: true,
-    post,
+    post: {
+      ...populatedPost.toObject(),
+      isLiked: false,
+      likesCount: 0,
+    },
   });
 });
 
@@ -87,9 +94,26 @@ const getFeedPostsController = asyncHandler(async (req, res) => {
       createdAt: -1,
     });
 
+  const enrichedPosts = await Promise.all(
+    posts.map(async (post) => {
+      const likesCount = await Like.countDocuments({
+        post: post._id,
+      });
+      const isLiked = !!(await Like.findOne({
+        user: currentUserId,
+        post: post._id,
+      }));
+      return {
+        ...post.toObject(),
+        isLiked,
+        likesCount,
+      };
+    }),
+  );
+
   return res.status(200).json({
     success: true,
-    posts,
+    posts: enrichedPosts,
   });
 });
 

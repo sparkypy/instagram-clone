@@ -6,6 +6,7 @@ import { userRouter } from "./routes/user.routes.js";
 import { followRouter } from "./routes/follow.routes.js";
 import { postRouter } from "./routes/post.routes.js";
 import { errorMiddleware } from "./middlewares/error.middleware.js";
+import { likeRouter } from "./routes/like.routes.js";
 
 const app = express();
 
@@ -23,6 +24,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/users", userRouter);
 app.use("/api/follows", followRouter);
 app.use("/api/posts", postRouter);
+app.use("/api/likes", likeRouter);
 
 app.use(errorMiddleware);
 

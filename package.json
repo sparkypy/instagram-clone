@@ -3,5 +3,9 @@
     "client": "cd frontend && npm run dev",
     "server": "cd backend && npm run dev",
     "dev": "concurrently \"npm run client\" \"npm run server\""
+  },
+  "devDependencies": {
+    "prettier": "^3.8.3",
+    "prettier-plugin-tailwindcss": "^0.8.0"
   }
 }

@@ -1,5 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { getFeedPosts, createPost } from "../../services/postService";
+import { toggleLike } from "../../services/likeService";
+import { AiOutlineLike } from "react-icons/ai";
+import { GoCommentDiscussion } from "react-icons/go";
 
 import { errorPageStyles, loadingPageStyles } from "../../styles/classes";
 
@@ -10,10 +13,56 @@ export const Feed = () => {
 
   const [error, setError] = useState("");
 
+  const [content, setContent] = useState("");
+  const [posting, setPosting] = useState(false);
+
+  const textareaRef = useRef(null);
+
+  const handleLike = async (postId) => {
+    try {
+      const data = await toggleLike(postId);
+      setPosts((prevPosts) => {
+        return prevPosts.map((post) => {
+          if (post._id !== postId) return post;
+          return {
+            ...post,
+            isLiked: data.liked,
+            likesCount: data.liked ? post.likesCount + 1 : post.likesCount - 1,
+          };
+        });
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleChange = (e) => {
+    const value = e.target.value;
+    setContent(value);
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  };
+
+  const handleCreatePost = async () => {
+    if (!content.trim()) return;
+    try {
+      setPosting(true);
+      const normalizedContent = content.replace(/[ \t]+/g, " ").trim();
+      const data = await createPost(normalizedContent);
+      setPosts((prev) => [data.post, ...prev]);
+      setContent("");
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setPosting(false);
+    }
+  };
+
   const fetchFeed = async () => {
     try {
       const data = await getFeedPosts();
-
       setPosts(data.posts);
     } catch (err) {
       setError(err?.response?.data?.message || "Failed to load feed");
@@ -45,38 +94,16 @@ export const Feed = () => {
   return (
     <div className="relative w-full overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
       {/* Background Glow */}
-      <div className="absolute -left-40 top-0 h-96 w-96 rounded-full bg-purple-700/20 blur-3xl" />
+      <div className="absolute top-0 -left-40 h-96 w-96 rounded-full bg-purple-700/20 blur-3xl" />
 
-      <div className="absolute bottom-0 right-0 h-96 w-96 rounded-full bg-fuchsia-700/20 blur-3xl" />
+      <div className="absolute right-0 bottom-0 h-96 w-96 rounded-full bg-fuchsia-700/20 blur-3xl" />
 
       <div className="relative mx-auto flex w-full max-w-2xl flex-col gap-6">
         {/* Feed Header */}
-        <div
-          className="
-            overflow-hidden
-            rounded-4xl
-            border border-white/10
-            bg-white/5
-            p-6
-            shadow-2xl
-            backdrop-blur-2xl
-          "
-        >
+        <div className="overflow-hidden rounded-4xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-2xl">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h1
-                className="
-                  bg-linear-to-r
-                  from-purple-200
-                  to-fuchsia-400
-                  bg-clip-text
-                  text-3xl
-                  font-black
-                  text-transparent
-
-                  sm:text-4xl
-                "
-              >
+              <h1 className="bg-linear-to-r from-purple-200 to-fuchsia-400 bg-clip-text text-3xl font-black text-transparent sm:text-4xl">
                 Your Feed
               </h1>
 
@@ -85,22 +112,10 @@ export const Feed = () => {
               </p>
             </div>
 
-            <div
-              className="
-                hidden
-                rounded-2xl
-                border border-white/10
-                bg-white/5
-                px-4 py-3
-                text-center
-                backdrop-blur-xl
-
-                sm:block
-              "
-            >
+            <div className="hidden rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center backdrop-blur-xl sm:block">
               <p className="text-xl font-bold text-white">{posts.length}</p>
 
-              <p className="text-xs uppercase tracking-widest text-zinc-400">
+              <p className="text-xs tracking-widest text-zinc-400 uppercase">
                 Posts
               </p>
             </div>
@@ -109,17 +124,7 @@ export const Feed = () => {
 
         {/* Empty Feed */}
         {posts.length === 0 && (
-          <div
-            className="
-              rounded-4xl
-              border border-dashed border-white/10
-              bg-white/5
-              p-10
-              text-center
-              shadow-xl
-              backdrop-blur-2xl
-            "
-          >
+          <div className="rounded-4xl border border-dashed border-white/10 bg-white/5 p-10 text-center shadow-xl backdrop-blur-2xl">
             <p className="text-lg font-semibold text-zinc-200">No posts yet.</p>
 
             <p className="mt-2 text-sm text-zinc-500">
@@ -128,53 +133,46 @@ export const Feed = () => {
           </div>
         )}
 
+        {/* text area */}
+        <div className="shadow-xl' rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+          <textarea
+            ref={textareaRef}
+            value={content}
+            onChange={handleChange}
+            placeholder="What's on your mind?"
+            maxLength={500}
+            style={{
+              whiteSpace: "break-spaces",
+            }}
+            className="min-h-30 w-full resize-none overflow-hidden rounded-2xl border border-white/10 bg-black/20 p-4 break-all text-white outline-none placeholder:text-zinc-500"
+          />
+
+          <div className="mt-4 flex items-center justify-between">
+            <p className="text-sm text-zinc-400">{content.length}/500</p>
+
+            <button
+              onClick={handleCreatePost}
+              disabled={posting || !content.trim()}
+              className="rounded-xl bg-purple-500 px-5 py-2 font-medium text-white transition hover:bg-purple-600 disabled:opacity-50"
+            >
+              {posting ? "Posting..." : "Post"}
+            </button>
+          </div>
+        </div>
+
         {/* Posts */}
         {posts.map((post) => (
           <div
             key={post._id}
-            className="
-              group
-              relative
-              overflow-hidden
-              rounded-4xl
-              border border-white/10
-              bg-white/5
-              p-5
-              shadow-2xl
-              backdrop-blur-2xl
-              transition-all
-              duration-300
-
-              hover:border-purple-400/20
-              hover:bg-white/[0.07]
-            "
+            className="group relative overflow-hidden rounded-4xl border border-white/10 bg-white/5 p-5 shadow-2xl backdrop-blur-2xl transition-all duration-300 hover:border-purple-400/20 hover:bg-white/[0.07]"
           >
             {/* Card Glow */}
-            <div
-              className="
-                absolute
-                inset-0
-                bg-[radial-gradient(circle_at_top_left,rgba(168,85,247,0.12),transparent_30%)]
-                opacity-0
-                transition-opacity
-                duration-300
-
-                group-hover:opacity-100
-              "
-            />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(168,85,247,0.12),transparent_30%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
             {/* Content */}
             <div className="relative">
               {/* Top */}
-              <div
-                className="
-                  mb-5
-                  flex
-                  items-start
-                  justify-between
-                  gap-4
-                "
-              >
+              <div className="mb-5 flex items-start justify-between gap-4">
                 {/* User */}
                 <div className="flex items-center gap-4">
                   <div className="relative">
@@ -183,136 +181,76 @@ export const Feed = () => {
                     <img
                       src={post.owner.profileImage}
                       alt={post.owner.username}
-                      className="
-                        relative
-                        h-12
-                        w-12
-                        rounded-full
-                        border border-white/10
-                        object-cover
-                        object-center
-
-                        sm:h-14
-                        sm:w-14
-                      "
+                      className="relative h-12 w-12 rounded-full border border-white/10 object-cover object-center sm:h-14 sm:w-14"
                     />
                   </div>
 
                   <div>
-                    <h2
-                      className="
-                        text-base
-                        font-semibold
-                        text-white
-
-                        sm:text-lg
-                      "
-                    >
-                      @{post.owner.username}
+                    <h2 className="text-base font-semibold text-white sm:text-lg">
+                      @{post.owner.username || "undefined"}
                     </h2>
 
-                    <p
-                      className="
-                        mt-1
-                        text-xs
-                        text-zinc-500
-
-                        sm:text-sm
-                      "
-                    >
+                    <p className="mt-1 text-xs text-zinc-500 sm:text-sm">
                       {new Date(post.createdAt).toLocaleString()}
                     </p>
                   </div>
                 </div>
 
                 {/* Dot Menu Placeholder */}
-                <button
-                  className="
-                    rounded-xl
-                    border border-white/10
-                    bg-white/5
-                    px-3 py-2
-                    text-zinc-400
-                    transition-all
-                    duration-300
-
-                    hover:bg-white/10
-                    hover:text-white
-                  "
-                >
+                <button className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-zinc-400 transition-all duration-300 hover:bg-white/10 hover:text-white">
                   •••
                 </button>
               </div>
 
               {/* Post Content */}
-              <div
-                className="
-                  rounded-3xl
-                  border border-white/5
-                  bg-black/20
-                  p-5
-                "
-              >
+              <div className="rounded-3xl border border-white/5 bg-black/20 p-5">
                 <p
-                  className="
-                    whitespace-pre-wrap
-                    wrap-break-word
-                    text-sm
-                    leading-relaxed
-                    text-zinc-200
-
-                    sm:text-base
-                  "
+                  style={{
+                    whiteSpace: "break-spaces",
+                  }}
+                  className="overflow-hidden text-sm leading-relaxed wrap-break-word whitespace-pre-wrap text-zinc-200 sm:text-base"
                 >
                   {post.content}
                 </p>
               </div>
 
               {/* Bottom Actions */}
-              <div
-                className="
-                  mt-5
-                  flex
-                  items-center
-                  gap-3
-                "
-              >
+              <div className="mt-5 flex items-center gap-3">
+                {/* Like Button */}
                 <button
-                  className="
-                    rounded-2xl
-                    border border-white/10
-                    bg-white/5
-                    px-4 py-2
-                    text-sm
-                    text-zinc-300
-                    transition-all
-                    duration-300
-
-                    hover:border-purple-400/20
-                    hover:bg-purple-500/10
-                    hover:text-purple-200
-                  "
+                  onClick={() => handleLike(post._id)}
+                  className={`group relative flex items-center justify-center gap-1.5 overflow-hidden rounded-2xl border px-3 py-2 text-sm font-medium backdrop-blur-xl transition-all duration-300 ${
+                    post.isLiked
+                      ? `border-blue-500/20 bg-blue-500/10 text-blue-200 shadow-[0_0_25px_rgba(59,130,246,0.15)]`
+                      : `border-white/10 bg-white/5 text-zinc-300 hover:border-purple-400/20 hover:bg-purple-500/10 hover:text-purple-200`
+                  } `}
                 >
-                  Like
+                  {/* Glow */}
+                  <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(168,85,247,0.12),transparent_70%)]" />
+                  </div>
+
+                  <AiOutlineLike
+                    size={19}
+                    className={`relative transition-all duration-300 ${post.isLiked ? "scale-110 fill-blue-400" : ""} `}
+                  />
+
+                  <span className="relative text-sm">{post.likesCount}</span>
                 </button>
 
-                <button
-                  className="
-                    rounded-2xl
-                    border border-white/10
-                    bg-white/5
-                    px-4 py-2
-                    text-sm
-                    text-zinc-300
-                    transition-all
-                    duration-300
+                {/* Comment Button */}
+                <button className="group/comment relative flex items-center justify-center gap-1.5 overflow-hidden rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-zinc-300 backdrop-blur-xl transition-all duration-300 hover:border-fuchsia-400/20 hover:bg-fuchsia-500/10 hover:text-fuchsia-200">
+                  {/* Glow */}
+                  <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover/comment:opacity-100">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(217,70,239,0.12),transparent_70%)]" />
+                  </div>
 
-                    hover:border-fuchsia-400/20
-                    hover:bg-fuchsia-500/10
-                    hover:text-fuchsia-200
-                  "
-                >
-                  Comment
+                  <GoCommentDiscussion
+                    size={19}
+                    className="relative transition-transform duration-300 group-hover/comment:scale-110"
+                  />
+
+                  <span className="relative text-sm">0</span>
                 </button>
               </div>
             </div>
