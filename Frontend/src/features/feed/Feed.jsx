@@ -62,11 +62,21 @@ export const Feed = () => {
 
     try {
       const data = await createComment(postId, content);
+      setPosts((prevPosts) =>
+        prevPosts.map((post) => {
+          if (post._id === postId)
+            return {
+              ...post,
+              commentsCount: post.commentsCount + 1,
+            };
+
+          return post;
+        }),
+      );
       setCommentsMap((prev) => ({
         ...prev,
         [postId]: [data.comment, ...(prev[postId] || [])],
       }));
-
       setCommentInputs((prev) => ({
         ...prev,
         [postId]: "",
@@ -79,6 +89,19 @@ export const Feed = () => {
   const handleDeleteComment = async (commentId, postId) => {
     try {
       await deleteComment(commentId);
+
+      setPosts((prevPosts) =>
+        prevPosts.map((post) => {
+          if (post._id === postId)
+            return {
+              ...post,
+              commentsCount: post.commentsCount - 1,
+            };
+
+          return post;
+        }),
+      );
+
       setCommentsMap((prev) => ({
         ...prev,
         [postId]: prev[postId].filter((comment) => {
@@ -325,7 +348,7 @@ export const Feed = () => {
                     className="relative transition-transform duration-300 group-hover/comment:scale-110"
                   />
 
-                  <span className="relative text-sm">0</span>
+                  <span className="relative text-sm">{post.commentsCount}</span>
                 </button>
               </div>
 

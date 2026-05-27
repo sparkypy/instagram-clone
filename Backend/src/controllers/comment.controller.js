@@ -72,14 +72,9 @@ const getPostCommentsController = asyncHandler(async (req, res) => {
       createdAt: -1,
     });
 
-  const commentsCount = await Comment.countDocuments({
-    post: postId,
-  });
-
   return res.status(200).json({
     success: true,
     comments,
-    commentsCount,
   });
 });
 

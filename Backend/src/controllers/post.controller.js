@@ -3,6 +3,7 @@ import { Post } from "../models/post.model.js";
 import { User } from "../models/user.model.js";
 import { Follow } from "../models/follow.model.js";
 import { Like } from "../models/like.model.js";
+import { Comment } from "../models/comment.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 
@@ -99,6 +100,11 @@ const getFeedPostsController = asyncHandler(async (req, res) => {
       const likesCount = await Like.countDocuments({
         post: post._id,
       });
+
+      const commentsCount = await Comment.countDocuments({
+        post: post._id,
+      });
+
       const isLiked = !!(await Like.findOne({
         user: currentUserId,
         post: post._id,
@@ -107,6 +113,7 @@ const getFeedPostsController = asyncHandler(async (req, res) => {
         ...post.toObject(),
         isLiked,
         likesCount,
+        commentsCount,
       };
     }),
   );
