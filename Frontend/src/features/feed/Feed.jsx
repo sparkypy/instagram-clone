@@ -2,9 +2,19 @@ import { useEffect, useState, useRef } from "react";
 import { getFeedPosts, createPost } from "../../services/postService";
 import { toggleLike } from "../../services/likeService";
 import { AiOutlineLike } from "react-icons/ai";
+
+import {
+  createComment,
+  deleteComment,
+  getPostComments,
+} from "../../services/commentService";
 import { GoCommentDiscussion } from "react-icons/go";
 
+import { IoMdTrash } from "react-icons/io";
+
 import { errorPageStyles, loadingPageStyles } from "../../styles/classes";
+
+import { useAuth } from "../../context/AuthContext";
 
 export const Feed = () => {
   const [posts, setPosts] = useState([]);
@@ -17,6 +27,68 @@ export const Feed = () => {
   const [posting, setPosting] = useState(false);
 
   const textareaRef = useRef(null);
+
+  const { user } = useAuth();
+  const [commentsMap, setCommentsMap] = useState({});
+  const [showComments, setShowComments] = useState({});
+  const [commentInputs, setCommentInputs] = useState({});
+
+  const handleToggleComments = async (postId) => {
+    const currentlyOpen = showComments[postId];
+
+    setShowComments((prev) => ({
+      ...prev,
+      [postId]: !currentlyOpen,
+    }));
+
+    if (currentlyOpen || commentsMap[postId]) {
+      return;
+    }
+
+    try {
+      const data = await getPostComments(postId);
+      setCommentsMap((prev) => ({
+        ...prev,
+        [postId]: data.comments,
+      }));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleCreateComment = async (postId) => {
+    const content = commentInputs[postId];
+    if (!content?.trim()) return;
+
+    try {
+      const data = await createComment(postId, content);
+      setCommentsMap((prev) => ({
+        ...prev,
+        [postId]: [data.comment, ...(prev[postId] || [])],
+      }));
+
+      setCommentInputs((prev) => ({
+        ...prev,
+        [postId]: "",
+      }));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteComment = async (commentId, postId) => {
+    try {
+      await deleteComment(commentId);
+      setCommentsMap((prev) => ({
+        ...prev,
+        [postId]: prev[postId].filter((comment) => {
+          if (comment._id !== commentId) return comment;
+        }),
+      }));
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const handleLike = async (postId) => {
     try {
@@ -239,7 +311,10 @@ export const Feed = () => {
                 </button>
 
                 {/* Comment Button */}
-                <button className="group/comment relative flex items-center justify-center gap-1.5 overflow-hidden rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-zinc-300 backdrop-blur-xl transition-all duration-300 hover:border-fuchsia-400/20 hover:bg-fuchsia-500/10 hover:text-fuchsia-200">
+                <button
+                  onClick={() => handleToggleComments(post._id)}
+                  className="group/comment relative flex items-center justify-center gap-1.5 overflow-hidden rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-zinc-300 backdrop-blur-xl transition-all duration-300 hover:border-fuchsia-400/20 hover:bg-fuchsia-500/10 hover:text-fuchsia-200"
+                >
                   {/* Glow */}
                   <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover/comment:opacity-100">
                     <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(217,70,239,0.12),transparent_70%)]" />
@@ -253,6 +328,96 @@ export const Feed = () => {
                   <span className="relative text-sm">0</span>
                 </button>
               </div>
+
+              {showComments[post._id] && (
+                <div className="mt-6 rounded-4xl border border-white/10 bg-white/3 p-4 backdrop-blur-2xl sm:p-5">
+                  {/* Comment Input */}
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <input
+                      type="text"
+                      value={commentInputs[post._id] || ""}
+                      onChange={(e) =>
+                        setCommentInputs((prev) => ({
+                          ...prev,
+
+                          [post._id]: e.target.value,
+                        }))
+                      }
+                      placeholder="Write a comment..."
+                      className="flex-1 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white transition-all duration-300 outline-none placeholder:text-zinc-500 focus:border-fuchsia-400/20 focus:bg-white/3 focus:shadow-[0_0_30px_rgba(217,70,239,0.12)] sm:text-base"
+                    />
+
+                    <button
+                      onClick={() => handleCreateComment(post._id)}
+                      className="group relative overflow-hidden rounded-2xl bg-linear-to-r from-purple-600 to-fuchsia-600 px-5 py-3 text-sm font-medium text-white transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(217,70,239,0.25)] active:scale-[0.98]"
+                    >
+                      <span className="relative z-10">Post</span>
+
+                      <div className="absolute inset-0 translate-y-full bg-white/10 transition-transform duration-300 group-hover:translate-y-0" />
+                    </button>
+                  </div>
+
+                  {/* Comments */}
+                  <div className="mt-5 flex flex-col gap-4">
+                    {commentsMap[post._id]?.length > 0 ? (
+                      commentsMap[post._id]?.map((comment) => (
+                        <div
+                          key={comment._id}
+                          className="group/comment relative overflow-hidden rounded-3xl border border-white/10 bg-black/20 p-4 transition-all duration-300 hover:border-fuchsia-400/10 hover:bg-white/3"
+                        >
+                          {/* Glow */}
+                          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(217,70,239,0.08),transparent_40%)] opacity-0 transition-opacity duration-300 group-hover/comment:opacity-100" />
+
+                          <div className="relative flex items-start justify-between gap-4">
+                            {/* Left */}
+                            <div className="flex min-w-0 flex-1 gap-3">
+                              {/* Avatar */}
+                              <div className="relative shrink-0">
+                                <div className="absolute inset-0 rounded-full bg-fuchsia-500/20 blur-xl" />
+
+                                <img
+                                  src={comment.owner.profileImage}
+                                  alt={comment.owner.username}
+                                  className="relative h-10 w-10 rounded-full border border-white/10 object-cover sm:h-11 sm:w-11"
+                                />
+                              </div>
+
+                              {/* Content */}
+                              <div className="min-w-0">
+                                <h3 className="truncate text-sm font-semibold text-white sm:text-base">
+                                  @{comment.owner.username}
+                                </h3>
+
+                                <p className="mt-1 text-sm leading-relaxed wrap-break-word text-zinc-300 sm:text-[15px]">
+                                  {comment.content}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Delete Button */}
+                            {user?._id === comment.owner._id && (
+                              <button
+                                onClick={() =>
+                                  handleDeleteComment(comment._id, post._id)
+                                }
+                                className="shrink-0 rounded-xl border border-transparent p-2 text-zinc-500 transition-all duration-300 hover:border-red-500/20 hover:bg-red-500/10 hover:text-red-400"
+                              >
+                                <IoMdTrash size={17} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="rounded-3xl border border-dashed border-white/10 bg-black/10 px-5 py-8 text-center">
+                        <p className="text-sm text-zinc-500">
+                          No comments yet.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         ))}
