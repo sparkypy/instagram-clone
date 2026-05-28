@@ -16,7 +16,7 @@ const createCommentController = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Comment content is required");
   }
 
-  const post = Post.findById({ postId });
+  const post = await Post.findById(postId);
 
   if (!post) {
     throw new ApiError(404, "Post not found");

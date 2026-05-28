@@ -25,6 +25,7 @@ const createPostController = asyncHandler(async (req, res) => {
       ...populatedPost.toObject(),
       isLiked: false,
       likesCount: 0,
+      commentsCount: 0,
     },
   });
 });
