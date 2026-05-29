@@ -133,7 +133,7 @@ export const CommentsModal = ({
 
                     <div>
                       <h2 className="font-semibold text-white">
-                        @{post.owner.username}
+                        @{post.owner.username || "not defined"}
                       </h2>
 
                       <p className="text-sm text-zinc-500">

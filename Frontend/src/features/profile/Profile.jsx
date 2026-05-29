@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { getUserProfile } from "../../services/userService";
 import { followUser, unfollowUser } from "../../services/followService";
 import { loadingPageStyles, errorPageStyles } from "../../styles/classes";
+import { CommentsModal } from "../../components/ui/CommentsModal";
 
 export const Profile = () => {
   const { showToast } = useOutletContext();
@@ -13,6 +14,10 @@ export const Profile = () => {
   const { username } = useParams();
 
   const [profile, setProfile] = useState(null);
+  const [posts, setPosts] = useState([]);
+
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [isPostOpen, setIsPostOpen] = useState(false);
 
   const [loading, setLoading] = useState(true);
 
@@ -32,6 +37,11 @@ export const Profile = () => {
     duration-300
     hover:bg-white/10
   `;
+
+  const openPost = (post) => {
+    setSelectedPost(post);
+    setIsPostOpen(true);
+  };
 
   const handleFollowToggle = async () => {
     try {
@@ -71,8 +81,8 @@ export const Profile = () => {
   const fetchProfile = async () => {
     try {
       const data = await getUserProfile(username);
-
       setProfile(data.user);
+      setPosts(data.posts);
     } catch (error) {
       setError(error?.response?.data?.message || "Failed to fetch profile");
     } finally {
@@ -105,27 +115,13 @@ export const Profile = () => {
   return (
     <div className="relative w-full overflow-hidden rounded-4xl px-4 py-8 sm:px-6 lg:px-10">
       {/* Glow Effects */}
-      <div className="absolute -left-32 -top-32 h-72 w-72 rounded-full bg-purple-700/20 blur-3xl" />
+      <div className="absolute -top-32 -left-32 h-72 w-72 rounded-full bg-purple-700/20 blur-3xl" />
 
-      <div className="absolute -bottom-40 -right-40 h-80 w-80 rounded-full bg-fuchsia-600/20 blur-3xl" />
+      <div className="absolute -right-40 -bottom-40 h-80 w-80 rounded-full bg-fuchsia-600/20 blur-3xl" />
 
       <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-6">
         {/* HERO CARD */}
-        <div
-          className="
-            relative
-            overflow-hidden
-            rounded-4xl
-            border border-white/10
-            bg-white/5
-            p-5
-            shadow-2xl
-            backdrop-blur-2xl
-
-            sm:p-8
-            lg:p-10
-          "
-        >
+        <div className="relative overflow-hidden rounded-4xl border border-white/10 bg-white/5 p-5 shadow-2xl backdrop-blur-2xl sm:p-8 lg:p-10">
           {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(168,85,247,0.18),transparent_35%)]" />
 
@@ -139,56 +135,23 @@ export const Profile = () => {
                 <img
                   src={profile.profileImage}
                   alt={profile.username}
-                  className="
-                    relative
-                    h-28
-                    w-28
-                    rounded-full
-                    border-4
-                    border-white/10
-                    object-cover
-                    object-center
-
-                    sm:h-36
-                    sm:w-36
-                  "
+                  className="relative h-28 w-28 rounded-full border-4 border-white/10 object-cover object-center sm:h-36 sm:w-36"
                 />
               </div>
 
               {/* User Info */}
               <div className="space-y-4">
                 <div>
-                  <h1
-                    className="
-                      bg-linear-to-r
-                      from-purple-200
-                      to-fuchsia-400
-                      bg-clip-text
-                      text-3xl
-                      font-black
-                      text-transparent
-                      leading-normal
-                      sm:text-5xl
-                    "
-                  >
+                  <h1 className="bg-linear-to-r from-purple-200 to-fuchsia-400 bg-clip-text text-3xl leading-normal font-black text-transparent sm:text-5xl">
                     @{profile.username}
                   </h1>
 
-                  <p className=" text-sm text-zinc-400 sm:text-base">
-                    Digital Explorer • Community Member
+                  <p className="text-sm text-zinc-500">
+                    Joined {new Date(profile.createdAt).toLocaleDateString()}
                   </p>
                 </div>
 
-                <p
-                  className="
-                    max-w-2xl
-                    text-sm
-                    leading-relaxed
-                    text-zinc-300
-
-                    sm:text-base
-                  "
-                >
+                <p className="max-w-2xl text-sm leading-relaxed text-zinc-300 sm:text-base">
                   {profile.bio || "No bio yet."}
                 </p>
               </div>
@@ -198,13 +161,23 @@ export const Profile = () => {
             <div className="flex flex-col items-center gap-5">
               {/* Stats */}
               <div className="flex items-center justify-center gap-4 sm:gap-6">
+                {/* Posts */}
+                <div className={statsCardStyles}>
+                  <p className="text-2xl font-bold text-white">
+                    {posts.length}
+                  </p>
+
+                  <p className="mt-1 text-xs tracking-widest text-zinc-400 uppercase">
+                    Posts
+                  </p>
+                </div>
                 {/* Followers */}
                 <div className={statsCardStyles}>
                   <p className="text-2xl font-bold text-white">
                     {profile.followerCount}
                   </p>
 
-                  <p className="mt-1 text-xs uppercase tracking-widest text-zinc-400">
+                  <p className="mt-1 text-xs tracking-widest text-zinc-400 uppercase">
                     Followers
                   </p>
                 </div>
@@ -215,7 +188,7 @@ export const Profile = () => {
                     {profile.followingCount}
                   </p>
 
-                  <p className="mt-1 text-xs uppercase tracking-widest text-zinc-400">
+                  <p className="mt-1 text-xs tracking-widest text-zinc-400 uppercase">
                     Following
                   </p>
                 </div>
@@ -226,44 +199,11 @@ export const Profile = () => {
                 <button
                   onClick={handleFollowToggle}
                   disabled={followLoading}
-                  className={`
-                    group
-                    relative
-                    overflow-hidden
-                    rounded-2xl
-                    border
-                    px-8
-                    py-3
-                    text-sm
-                    font-semibold
-                    tracking-wide
-                    transition-all
-                    duration-300
-
-                    ${
-                      profile.isFollowing
-                        ? `
-                          border-white/10
-                          bg-white/5
-                          text-zinc-200
-                          hover:border-red-400/30
-                          hover:bg-red-500/10
-                          hover:text-red-300
-                        `
-                        : `
-                          border-purple-400/20
-                          bg-linear-to-r
-                          from-purple-600
-                          to-fuchsia-600
-                          text-white
-                          hover:scale-[1.03]
-                          hover:shadow-[0_0_35px_rgba(192,132,252,0.35)]
-                        `
-                    }
-
-                    disabled:cursor-not-allowed
-                    disabled:opacity-50
-                  `}
+                  className={`group relative overflow-hidden rounded-2xl border px-8 py-3 text-sm font-semibold tracking-wide transition-all duration-300 ${
+                    profile.isFollowing
+                      ? `border-white/10 bg-white/5 text-zinc-200 hover:border-red-400/30 hover:bg-red-500/10 hover:text-red-300 `
+                      : `border-purple-400/20 bg-linear-to-r from-purple-600 to-fuchsia-600 text-white hover:scale-[1.03] hover:shadow-[0_0_35px_rgba(192,132,252,0.35)] `
+                  } disabled:cursor-not-allowed disabled:opacity-50`}
                 >
                   <span className="relative z-10">
                     {followLoading
@@ -274,17 +214,7 @@ export const Profile = () => {
                   </span>
 
                   {!profile.isFollowing && (
-                    <div
-                      className="
-                        absolute
-                        inset-0
-                        translate-y-full
-                        bg-white/10
-                        transition-transform
-                        duration-300
-                        group-hover:translate-y-0
-                      "
-                    />
+                    <div className="absolute inset-0 translate-y-full bg-white/10 transition-transform duration-300 group-hover:translate-y-0" />
                   )}
                 </button>
               )}
@@ -293,97 +223,64 @@ export const Profile = () => {
         </div>
 
         {/* LOWER GRID */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {/* ABOUT */}
-          <div
-            className="
-              rounded-4xl
-              border border-white/10
-              bg-white/5
-              p-6
-              shadow-xl
-              backdrop-blur-2xl
-            "
-          >
-            <h2 className="text-lg font-bold text-white">About</h2>
-
-            <div className="mt-5 space-y-4">
-              <div>
-                <p className="text-xs uppercase tracking-widest text-zinc-500">
-                  Username
-                </p>
-
-                <p className="mt-1 text-zinc-200">@{profile.username}</p>
-              </div>
-
-              <div>
-                <p className="text-xs uppercase tracking-widest text-zinc-500">
-                  Joined
-                </p>
-
-                <p className="mt-1 text-zinc-200">
-                  {new Date(profile.createdAt).toLocaleDateString()}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-xs uppercase tracking-widest text-zinc-500">
-                  Bio
-                </p>
-
-                <p className="mt-1 text-zinc-300">
-                  {profile.bio || "This user hasn't added a bio yet."}
-                </p>
-              </div>
-            </div>
-          </div>
-
+        <div className="mt-2">
           {/* ACTIVITY */}
-          <div
-            className="
-              rounded-4xl
-              border border-white/10
-              bg-white/5
-              p-6
-              shadow-xl
-              backdrop-blur-2xl
+          <div className="rounded-4xl border border-white/10 bg-white/5 p-6 shadow-xl backdrop-blur-2xl lg:col-span-2">
+            <div className="mb-6 flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-white">Posts</h2>
 
-              lg:col-span-2
-            "
-          >
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-white">Activity</h2>
-
-              <span
-                className="
-                  rounded-full
-                  border border-purple-500/20
-                  bg-purple-500/10
-                  px-3 py-1
-                  text-xs
-                  text-purple-300
-                "
-              >
-                Coming Soon
-              </span>
+                <p className="text-sm text-zinc-500">
+                  {posts.length} published posts
+                </p>
+              </div>
             </div>
 
-            <div
-              className="
-                mt-6
-                flex
-                min-h-62.5
-                items-center
-                justify-center
-                rounded-3xl
-                border border-dashed border-white/10
-                bg-black/20
-              "
-            >
-              <p className="text-center text-sm text-zinc-500">
-                User posts, reels, comments and interactions will appear here
-                later.
-              </p>
+            <div className="mt-6 flex flex-col gap-4">
+              {posts.length === 0 ? (
+                <div className="flex h-60 items-center justify-center rounded-4xl border border-dashed border-white/10">
+                  <div className="text-center">
+                    <h3 className="text-lg text-white">No posts yet</h3>
+
+                    <p className="mt-2 text-zinc-500">
+                      This user hasn't shared anything yet.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                  {posts.map((post) => (
+                    <button
+                      key={post._id}
+                      onClick={() => openPost(post)}
+                      className="group relative aspect-square overflow-hidden rounded-3xl border border-white/10"
+                    >
+                      {post.image ? (
+                        <div className="h-full w-full">
+                          <img
+                            src={post.image}
+                            alt="post"
+                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                          <div className="absolute right-0 bottom-0 left-0 bg-linear-to-t from-black/90 to-transparent p-3">
+                            <p className="line-clamp-2 text-xs text-white">
+                              {post.content}
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex h-full flex-col justify-center bg-linear-to-br from-purple-500/10 to-fuchsia-500/10 p-5">
+                          <p className="line-clamp-4 text-sm text-zinc-300">
+                            {post.content}
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="absolute inset-0 bg-black/0 transition-all duration-300 group-hover:bg-black/40" />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

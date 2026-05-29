@@ -2,6 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
 import { Follow } from "../models/follow.model.js";
+import { Post } from "../models/post.model.js";
 
 const getUserProfileController = asyncHandler(async (req, res) => {
   const { username } = req.params;
@@ -30,6 +31,13 @@ const getUserProfileController = asyncHandler(async (req, res) => {
 
     isFollowing = !!followExists;
   }
+  const posts = await Post.find({
+    owner: user._id,
+  })
+    .populate("owner", "username profileImage")
+    .sort({
+      createdAt: -1,
+    });
   return res.status(200).json({
     success: true,
     user: {
@@ -38,8 +46,8 @@ const getUserProfileController = asyncHandler(async (req, res) => {
       followingCount,
       isFollowing,
     },
+    posts,
   });
 });
 
 export { getUserProfileController };
-
