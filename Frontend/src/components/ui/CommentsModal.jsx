@@ -105,52 +105,65 @@ export const CommentsModal = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md">
       <div className="relative h-screen w-full overflow-hidden border-white/10 bg-[#07010d] lg:h-[90vh] lg:max-h-225 lg:w-[95vw] lg:max-w-6xl lg:rounded-4xl lg:border">
-        <div className="flex h-full flex-col lg:grid lg:grid-cols-[1fr_420px]">
+        <div className="flex h-full flex-col lg:grid lg:grid-cols-[1.35fr_430px]">
           {/* LEFT SIDE */}
-          <div className="hidden border-r border-white/10 bg-black/20 lg:flex lg:flex-col">
+          <div className="hidden border-r border-purple-500/10 bg-black/20 lg:flex lg:flex-col">
             <div className="flex h-full flex-col">
               {/* Post Header */}
-              <div className="flex items-center gap-4 border-b border-white/10 p-5">
-                <img
-                  src={post.owner.profileImage}
-                  alt={post.owner.username}
-                  className="h-12 w-12 rounded-full border border-white/10 object-cover"
-                />
-
-                <div>
-                  <h2 className="font-semibold text-white">
-                    @{post.owner.username}
-                  </h2>
-
-                  <p className="text-sm text-zinc-500">
-                    {new Date(post.createdAt).toLocaleString()}
-                  </p>
-                </div>
-              </div>
 
               {/* Content */}
-              <div className="flex-1 overflow-y-auto p-6">
-                <div className="rounded-4xl border border-white/10 bg-white/5 p-6">
-                  <p
-                    style={{
-                      whiteSpace: "break-spaces",
-                    }}
-                    className="text-base leading-relaxed wrap-break-word whitespace-pre-wrap text-zinc-200"
-                  >
-                    {post.content}
-                  </p>
+              <div className="pretty-scrollbar flex-1 overflow-y-auto p-6">
+                {post.image && (
+                  <div className="flex h-[55vh] items-center justify-center overflow-hidden rounded-4xl border border-white/10 bg-black/30">
+                    <img
+                      src={post.image}
+                      alt="Post Image"
+                      className="h-full w-full object-contain"
+                    />
+                  </div>
+                )}
+
+                <div className="mt-5 rounded-4xl border border-white/10 bg-white/5 p-6">
+                  <div className="flex items-center gap-4">
+                    <img
+                      src={post.owner.profileImage}
+                      alt={post.owner.username}
+                      className="h-12 w-12 rounded-full border border-white/10 object-cover"
+                    />
+
+                    <div>
+                      <h2 className="font-semibold text-white">
+                        @{post.owner.username}
+                      </h2>
+
+                      <p className="text-sm text-zinc-500">
+                        {new Date(post.createdAt).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 border-t border-white/10 pt-5">
+                    <p
+                      style={{
+                        whiteSpace: "break-spaces",
+                      }}
+                      className="text-base leading-relaxed wrap-break-word whitespace-pre-wrap text-zinc-200"
+                    >
+                      {post.content}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
           {/* RIGHT SIDE */}
-          <div className="flex h-full min-h-0 flex-col">
+          <div className="flex h-full min-h-0 flex-col bg-white/2">
             <>
               {/* Header */}
               <div className="flex items-center justify-between border-b border-white/10 p-4 sm:p-5">
                 <div>
-                  <h2 className="text-lg font-bold text-white">Comments</h2>
+                  <h2 className="text-lg font-bold text-white">Discussion</h2>
 
                   <p className="text-sm text-zinc-500">
                     {comments.length} comments
@@ -166,7 +179,7 @@ export const CommentsModal = ({
               </div>
 
               {/* Comments */}
-              <div className="pretty-scrollbar min-h-0 flex-1 overflow-y-auto">
+              <div className="pretty-scrollbar min-h-0 flex-1 overflow-y-auto bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.04),transparent_50%)]">
                 {loading ? (
                   <div className="flex h-full items-center justify-center">
                     <p className="text-zinc-500">Loading comments...</p>
@@ -177,7 +190,7 @@ export const CommentsModal = ({
                       comments.map((comment) => (
                         <div
                           key={comment._id}
-                          className="group/comment relative overflow-hidden rounded-3xl border border-white/10 bg-white/3 p-4 transition-all duration-300 hover:border-fuchsia-400/10"
+                          className="group/comment relative overflow-hidden rounded-3xl border border-white/10 bg-black/20 p-4 transition-all duration-300 hover:border-fuchsia-400/10"
                         >
                           {/* Glow */}
                           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(217,70,239,0.08),transparent_40%)] opacity-0 transition-opacity duration-300 group-hover/comment:opacity-100" />
@@ -220,10 +233,16 @@ export const CommentsModal = ({
                         </div>
                       ))
                     ) : (
-                      <div className="flex h-40 items-center justify-center rounded-4xl border border-dashed border-white/10 bg-white/2">
-                        <p className="text-sm text-zinc-500">
-                          No comments yet.
-                        </p>
+                      <div className="flex h-40 flex-col items-center justify-center rounded-4xl border border-dashed border-white/10 bg-white/2">
+                        <>
+                          <p className="text-base font-medium text-zinc-300">
+                            No comments yet
+                          </p>
+
+                          <p className="mt-2 text-sm text-zinc-500">
+                            Be the first to start the conversation.
+                          </p>
+                        </>
                       </div>
                     )}
                   </div>
@@ -231,8 +250,8 @@ export const CommentsModal = ({
               </div>
 
               {/* Input */}
-              <div className="border-t border-white/10 p-4">
-                <div className="flex gap-3">
+              <div className="border-t border-white/10 bg-black/20 p-4">
+                <div className="flex gap-3 rounded-3xl border border-white/10 bg-white/3 p-3">
                   <input
                     type="text"
                     value={commentInput}
@@ -244,7 +263,7 @@ export const CommentsModal = ({
                   <button
                     onClick={handleCreateComment}
                     disabled={posting || !commentInput.trim()}
-                    className="rounded-2xl bg-linear-to-r from-purple-600 to-fuchsia-600 px-5 py-3 text-sm font-medium text-white transition-all duration-300 hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded-xl bg-linear-to-r from-purple-600 to-fuchsia-600 px-5 py-3 text-sm font-medium text-white transition-all duration-300 hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Post
                   </button>
