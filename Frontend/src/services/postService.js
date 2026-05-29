@@ -5,7 +5,11 @@ export const getFeedPosts = async () => {
   return response.data;
 };
 
-export const createPost = async (content) => {
-  const response = await api.post("/api/posts", { content });
+export const createPost = async (formData) => {
+  const response = await api.post("/api/posts", formData, {
+    headers: {
+      "Content-Type": "multipart/fomr-data",
+    },
+  });
   return response.data;
 };

@@ -41,7 +41,7 @@ export const PostCard = ({ post, handleLike, openComments }) => {
         </div>
 
         {/* Post Content */}
-        <div className="rounded-2xl border border-white/5 bg-black/20 p-3.5 md:p-5 md:rounded-3xl">
+        <div className="rounded-2xl border border-white/5 bg-black/20 p-3.5 md:rounded-3xl md:p-5">
           <p
             style={{
               whiteSpace: "break-spaces",
@@ -50,6 +50,14 @@ export const PostCard = ({ post, handleLike, openComments }) => {
           >
             {post.content}
           </p>
+
+          {post.image && (
+            <img
+              src={post.image}
+              alt="Post image"
+              className="mt-5 max-h-150 w-full rounded-3xl object-cover"
+            />
+          )}
         </div>
 
         {/* Bottom Actions */}

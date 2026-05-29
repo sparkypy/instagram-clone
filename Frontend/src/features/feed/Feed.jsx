@@ -24,6 +24,7 @@ export const Feed = () => {
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
 
   const selectedPost = posts.find((post) => post._id === selectedPostId);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   const openComments = (post) => {
     setSelectedPostId(post._id);
@@ -45,14 +46,9 @@ export const Feed = () => {
   };
 
   const handleCommentDeleted = (postId) => {
-    console.log("DELETE CALLBACK REACHED");
-
     setPosts((prevPosts) =>
       prevPosts.map((post) => {
         if (post._id !== postId) return post;
-        console.log(post._id, postId);
-        console.log(typeof post._id);
-        console.log(typeof postId);
         return {
           ...post,
           commentsCount: (post.commentsCount || 1) - 1,
@@ -93,7 +89,16 @@ export const Feed = () => {
     try {
       setPosting(true);
       const normalizedContent = content.replace(/[ \t]+/g, " ").trim();
-      const data = await createPost(normalizedContent);
+
+      const formData = new FormData();
+      formData.append("content", normalizedContent);
+
+      if (selectedImage) {
+        formData.append("image", selectedImage);
+      }
+
+      const data = await createPost(formData);
+
       setPosts((prev) => [data.post, ...prev]);
       setContent("");
     } catch (err) {
@@ -191,6 +196,15 @@ export const Feed = () => {
                 whiteSpace: "break-spaces",
               }}
               className="min-h-30 w-full resize-none overflow-hidden rounded-2xl border border-white/10 bg-black/20 p-4 break-all text-white outline-none placeholder:text-zinc-500"
+            />
+
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                setSelectedImage(e.target.files[0]);
+              }}
+              className="mt-4 text-sm text-zinc-400"
             />
 
             <div className="mt-4 flex items-center justify-between">

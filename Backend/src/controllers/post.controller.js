@@ -6,27 +6,41 @@ import { Like } from "../models/like.model.js";
 import { Comment } from "../models/comment.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
+import { imagekit } from "../lib/imagekit.js";
 
 const createPostController = asyncHandler(async (req, res) => {
   const { content } = req.body;
   if (typeof content !== "string" || !content.trim()) {
     throw new ApiError(400, "Post content is required");
   }
+
+  let imageUrl = "";
+
+  if (req.file) {
+    const uploadedImage = await imagekit.upload({
+      file: req.file.buffer,
+      fileName: `${Date.now()}-${req.file.originalname}`,
+    });
+
+    imageUrl = uploadedImage.url;
+  }
+
   const post = await Post.create({
     content: content.trim(),
     owner: req.user._id,
+    image: imageUrl,
   });
 
   const populatedPost = await post.populate("owner", "username profileImage");
 
-  return res.status(201).json({
+  res.status(201).json({
     success: true,
     post: {
       ...populatedPost.toObject(),
       isLiked: false,
       likesCount: 0,
       commentsCount: 0,
-    },
+    }
   });
 });
 

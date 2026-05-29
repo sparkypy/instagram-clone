@@ -40,13 +40,10 @@ export const CommentsModal = ({
 
   const handleDeleteComment = async (commentId) => {
     try {
-      console.log("DELETE START");
       await deleteComment(commentId);
-      console.log("DELETE END");
       setComments((prevComments) =>
         prevComments.filter((comment) => comment._id !== commentId),
       );
-      console.log("CALLING CALLBACK");
       onCommentDelete(post._id);
     } catch (err) {
       console.error(err);

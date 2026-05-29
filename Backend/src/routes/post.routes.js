@@ -6,11 +6,17 @@ import {
   getFeedPostsController,
 } from "../controllers/post.controller.js";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
+import { upload } from "../middlewares/upload.middleware.js";
 
 const postRouter = express.Router();
 
 // POST /api/posts/
-postRouter.post("/", authMiddleware, createPostController);
+postRouter.post(
+  "/",
+  authMiddleware,
+  upload.single("image"),
+  createPostController,
+);
 
 // DELETE /api/posts/:postId
 postRouter.delete("/:postId", authMiddleware, deletePostController);
