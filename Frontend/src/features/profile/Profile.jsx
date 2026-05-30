@@ -4,7 +4,8 @@ import { useAuth } from "../../context/AuthContext";
 import { getUserProfile } from "../../services/userService";
 import { followUser, unfollowUser } from "../../services/followService";
 import { loadingPageStyles, errorPageStyles } from "../../styles/classes";
-import { CommentsModal } from "../../components/ui/CommentsModal";
+import { PostModal } from "../../components/ui/PostModal";
+import clsx from "clsx";
 
 export const Profile = () => {
   const { showToast } = useOutletContext();
@@ -26,21 +27,32 @@ export const Profile = () => {
   const [followLoading, setFollowLoading] = useState(false);
 
   const statsCardStyles = `
-    min-w-28
-    rounded-3xl
-    border border-white/10
-    bg-white/5
-    px-5 py-4
-    text-center
-    backdrop-blur-xl
-    transition-all
-    duration-300
-    hover:bg-white/10
-  `;
+  h-16
+  w-28
+  md:h-18
+  lg:h-20
+  rounded-xl
+  border border-white/10
+  bg-white/5
+  flex
+  flex-col
+  items-center
+  justify-center
+  text-center
+  backdrop-blur-xl
+  transition-all
+  duration-300
+  hover:bg-white/10
+`;
 
   const openPost = (post) => {
     setSelectedPost(post);
     setIsPostOpen(true);
+  };
+
+  const handleClosePost = () => {
+    console.log("closing");
+    setIsPostOpen(false);
   };
 
   const handleFollowToggle = async () => {
@@ -121,28 +133,28 @@ export const Profile = () => {
 
       <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-6">
         {/* HERO CARD */}
-        <div className="relative overflow-hidden rounded-4xl border border-white/10 bg-white/5 p-5 shadow-2xl backdrop-blur-2xl sm:p-8 lg:p-10">
+        <div className="relative overflow-hidden rounded-4xl border border-white/10 bg-white/5 p-5 shadow-2xl backdrop-blur-2xl sm:p-4 lg:p-8">
           {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(168,85,247,0.18),transparent_35%)]" />
 
-          <div className="relative flex flex-col gap-10 lg:flex-row lg:items-center lg:justify-between">
+          <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:gap-8">
             {/* LEFT */}
             <div className="flex flex-col items-center gap-6 text-center lg:flex-row lg:text-left">
               {/* Avatar */}
-              <div className="relative">
+              <div className="relative shrink-0">
                 <div className="absolute inset-0 rounded-full bg-purple-500/20 blur-2xl" />
 
                 <img
                   src={profile.profileImage}
                   alt={profile.username}
-                  className="relative h-28 w-28 rounded-full border-4 border-white/10 object-cover object-center sm:h-36 sm:w-36"
+                  className="relative h-28 w-28 rounded-full border-4 border-white/10 object-cover object-center md:h-36 md:w-36"
                 />
               </div>
 
               {/* User Info */}
-              <div className="space-y-4">
+              <div className="space-y-2 lg:space-y-4">
                 <div>
-                  <h1 className="bg-linear-to-r from-purple-200 to-fuchsia-400 bg-clip-text text-3xl leading-normal font-black text-transparent sm:text-5xl">
+                  <h1 className="bg-linear-to-r from-purple-200 to-fuchsia-400 bg-clip-text text-2xl leading-normal font-black text-transparent md:text-3xl lg:text-4xl">
                     @{profile.username}
                   </h1>
 
@@ -160,36 +172,42 @@ export const Profile = () => {
             {/* RIGHT */}
             <div className="flex flex-col items-center gap-5">
               {/* Stats */}
-              <div className="flex items-center justify-center gap-4 sm:gap-6">
-                {/* Posts */}
-                <div className={statsCardStyles}>
-                  <p className="text-2xl font-bold text-white">
-                    {posts.length}
-                  </p>
-
-                  <p className="mt-1 text-xs tracking-widest text-zinc-400 uppercase">
-                    Posts
-                  </p>
-                </div>
+              <div className="grid grid-cols-2 gap-3 md:flex md:flex-row md:gap-4">
                 {/* Followers */}
                 <div className={statsCardStyles}>
-                  <p className="text-2xl font-bold text-white">
+                  <p className="text-lg font-bold text-white lg:text-xl">
                     {profile.followerCount}
                   </p>
 
-                  <p className="mt-1 text-xs tracking-widest text-zinc-400 uppercase">
+                  <p className="lg:mt-1 text-xs tracking-wider text-zinc-400 uppercase lg:tracking-widest">
                     Followers
                   </p>
                 </div>
 
                 {/* Following */}
                 <div className={statsCardStyles}>
-                  <p className="text-2xl font-bold text-white">
+                  <p className="text-lg font-bold text-white lg:text-xl">
                     {profile.followingCount}
                   </p>
 
-                  <p className="mt-1 text-xs tracking-widest text-zinc-400 uppercase">
+                  <p className="lg:mt-1 text-xs tracking-wider text-zinc-400 uppercase lg:tracking-widest">
                     Following
+                  </p>
+                </div>
+
+                {/* Posts */}
+                <div
+                  className={clsx(
+                    statsCardStyles,
+                    "col-span-2 justify-self-center",
+                  )}
+                >
+                  <p className="text-lg font-bold text-white lg:text-xl">
+                    {posts.length}
+                  </p>
+
+                  <p className="lg:mt-1 text-xs tracking-wider text-zinc-400 uppercase lg:tracking-widest">
+                    Posts
                   </p>
                 </div>
               </div>
@@ -285,6 +303,11 @@ export const Profile = () => {
           </div>
         </div>
       </div>
+      <PostModal
+        post={selectedPost}
+        isOpen={isPostOpen}
+        onClose={handleClosePost}
+      />
     </div>
   );
 };

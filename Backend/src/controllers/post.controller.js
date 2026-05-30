@@ -7,6 +7,7 @@ import { Comment } from "../models/comment.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { imagekit } from "../lib/imagekit.js";
+import { enrichPost } from "../utils/enrichPosts.js";
 
 const createPostController = asyncHandler(async (req, res) => {
   const { content } = req.body;
@@ -40,7 +41,7 @@ const createPostController = asyncHandler(async (req, res) => {
       isLiked: false,
       likesCount: 0,
       commentsCount: 0,
-    }
+    },
   });
 });
 
@@ -112,24 +113,7 @@ const getFeedPostsController = asyncHandler(async (req, res) => {
 
   const enrichedPosts = await Promise.all(
     posts.map(async (post) => {
-      const likesCount = await Like.countDocuments({
-        post: post._id,
-      });
-
-      const commentsCount = await Comment.countDocuments({
-        post: post._id,
-      });
-
-      const isLiked = !!(await Like.findOne({
-        user: currentUserId,
-        post: post._id,
-      }));
-      return {
-        ...post.toObject(),
-        isLiked,
-        likesCount,
-        commentsCount,
-      };
+      return await enrichPost(post, currentUserId);
     }),
   );
 

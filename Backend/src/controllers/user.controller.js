@@ -3,6 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
 import { Follow } from "../models/follow.model.js";
 import { Post } from "../models/post.model.js";
+import { enrichPost } from "../utils/enrichPosts.js";
 
 const getUserProfileController = asyncHandler(async (req, res) => {
   const { username } = req.params;
@@ -38,6 +39,12 @@ const getUserProfileController = asyncHandler(async (req, res) => {
     .sort({
       createdAt: -1,
     });
+
+  const enrichedPosts = await Promise.all(
+    posts.map((post) => {
+      return enrichPost(post, user._id);
+    }),
+  );
   return res.status(200).json({
     success: true,
     user: {
@@ -46,7 +53,7 @@ const getUserProfileController = asyncHandler(async (req, res) => {
       followingCount,
       isFollowing,
     },
-    posts,
+    posts: enrichedPosts,
   });
 });
 
