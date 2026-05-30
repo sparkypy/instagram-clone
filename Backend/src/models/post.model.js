@@ -4,8 +4,8 @@ const postSchema = new mongoose.Schema(
   {
     content: {
       type: String,
-      required: true,
       trim: true,
+      default: "",
       maxlength: [500, "Post cannot exceed 500 characters"],
     },
 

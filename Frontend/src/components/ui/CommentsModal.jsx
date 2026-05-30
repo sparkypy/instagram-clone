@@ -22,6 +22,7 @@ export const CommentsModal = ({
   const [loading, setLoading] = useState(true);
   const [commentInput, setCommentInput] = useState("");
   const [posting, setPosting] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const handleCreateComment = async () => {
     if (!commentInput.trim()) return;
@@ -102,19 +103,28 @@ export const CommentsModal = ({
 
   if (!isOpen || !post) return null;
 
+  const MAX_CONTENT_LENGTH = 180;
+
+  const isLongContent = post.content.length > MAX_CONTENT_LENGTH;
+
+  const displayContent =
+    isExpanded || !isLongContent
+      ? post.content
+      : `${post.content.slice(0, MAX_CONTENT_LENGTH)}...`;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md">
       <div className="relative h-screen w-full overflow-hidden border-white/10 bg-[#07010d] lg:h-[90vh] lg:max-h-225 lg:w-[95vw] lg:max-w-6xl lg:rounded-4xl lg:border">
         <div className="flex h-full flex-col lg:grid lg:grid-cols-[1.35fr_430px]">
           {/* LEFT SIDE */}
-          <div className="hidden border-r border-purple-500/10 bg-black/20 lg:flex lg:flex-col">
-            <div className="flex h-full flex-col">
+          <div className="hidden min-w-0 border-r border-purple-500/10 bg-black/20 lg:flex lg:flex-col">
+            <div className="flex h-full min-w-0 flex-col">
               {/* Post Header */}
 
               {/* Content */}
-              <div className="pretty-scrollbar flex-1 overflow-y-auto p-6">
+              <div className="pretty-scrollbar min-w-0 flex-1 overflow-y-auto p-6">
                 {post.image && (
-                  <div className="flex h-[55vh] items-center justify-center overflow-hidden rounded-4xl border border-white/10 bg-black/30">
+                  <div className="flex h-[50vh] max-h-125 items-center justify-center overflow-hidden rounded-4xl border border-white/10 bg-black/30">
                     <img
                       src={post.image}
                       alt="Post Image"
@@ -123,7 +133,7 @@ export const CommentsModal = ({
                   </div>
                 )}
 
-                <div className="mt-5 rounded-4xl border border-white/10 bg-white/5 p-6">
+                <div className="mx-auto mt-5 max-w-2xl min-w-0 overflow-hidden rounded-4xl border border-white/10 bg-white/5 p-6">
                   <div className="flex items-center gap-4">
                     <img
                       src={post.owner.profileImage}
@@ -142,15 +152,25 @@ export const CommentsModal = ({
                     </div>
                   </div>
 
-                  <div className="mt-5 border-t border-white/10 pt-5">
+                  <div
+                    className={`mt-5 min-w-0 border-t border-white/10 pt-5 ${isExpanded ? "max-h-[20vh] overflow-y-auto" : ""} `}
+                  >
                     <p
                       style={{
                         whiteSpace: "break-spaces",
                       }}
-                      className="text-base leading-relaxed wrap-break-word whitespace-pre-wrap text-zinc-200"
+                      className="max-w-full text-xs leading-relaxed wrap-break-word whitespace-pre-wrap text-zinc-200"
                     >
-                      {post.content}
+                      {displayContent}
                     </p>
+                    {isLongContent && (
+                      <button
+                        onClick={() => setIsExpanded((prev) => !prev)}
+                        className="mt-3 text-sm text-purple-400 hover:text-purple-300"
+                      >
+                        {isExpanded ? "Show Less" : "Expand"}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -206,12 +226,12 @@ export const CommentsModal = ({
                             {/* Content */}
                             <div className="min-w-0 flex-1">
                               <div className="flex items-start justify-between gap-3">
-                                <div>
+                                <div className="min-w-0">
                                   <h3 className="text-sm font-semibold text-white">
                                     @{comment.owner.username}
                                   </h3>
 
-                                  <p className="mt-1 text-sm leading-relaxed wrap-break-word text-zinc-300">
+                                  <p className="mt-1 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap text-zinc-300">
                                     {comment.content}
                                   </p>
                                 </div>

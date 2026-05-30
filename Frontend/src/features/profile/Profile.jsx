@@ -6,24 +6,18 @@ import { followUser, unfollowUser } from "../../services/followService";
 import { loadingPageStyles, errorPageStyles } from "../../styles/classes";
 import { PostModal } from "../../components/ui/PostModal";
 import clsx from "clsx";
+import { toggleLike } from "../../services/likeService";
 
 export const Profile = () => {
   const { showToast } = useOutletContext();
-
   const { user } = useAuth();
-
   const { username } = useParams();
-
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
-
   const [selectedPost, setSelectedPost] = useState(null);
   const [isPostOpen, setIsPostOpen] = useState(false);
-
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState("");
-
   const [followLoading, setFollowLoading] = useState(false);
 
   const statsCardStyles = `
@@ -44,6 +38,34 @@ export const Profile = () => {
   duration-300
   hover:bg-white/10
 `;
+
+  const handleLike = async (postId) => {
+    try {
+      const data = await toggleLike(postId);
+
+      setPosts((prevPosts) =>
+        prevPosts.map((post) => {
+          if (post._id !== postId) return post;
+
+          return {
+            ...post,
+            isLiked: data.liked,
+            likesCount: data.liked ? post.likesCount + 1 : post.likesCount - 1,
+          };
+        }),
+      );
+
+      if (selectedPost?._id === postId) {
+        setSelectedPost((prev) => ({
+          ...prev,
+          isLiked: data.liked,
+          likesCount: data.liked ? prev.likesCount + 1 : prev.likesCount - 1,
+        }));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const openPost = (post) => {
     setSelectedPost(post);
@@ -178,7 +200,7 @@ export const Profile = () => {
                     {profile.followerCount}
                   </p>
 
-                  <p className="lg:mt-1 text-xs tracking-wider text-zinc-400 uppercase lg:tracking-widest">
+                  <p className="text-xs tracking-wider text-zinc-400 uppercase lg:mt-1 lg:tracking-widest">
                     Followers
                   </p>
                 </div>
@@ -189,7 +211,7 @@ export const Profile = () => {
                     {profile.followingCount}
                   </p>
 
-                  <p className="lg:mt-1 text-xs tracking-wider text-zinc-400 uppercase lg:tracking-widest">
+                  <p className="text-xs tracking-wider text-zinc-400 uppercase lg:mt-1 lg:tracking-widest">
                     Following
                   </p>
                 </div>
@@ -205,7 +227,7 @@ export const Profile = () => {
                     {posts.length}
                   </p>
 
-                  <p className="lg:mt-1 text-xs tracking-wider text-zinc-400 uppercase lg:tracking-widest">
+                  <p className="text-xs tracking-wider text-zinc-400 uppercase lg:mt-1 lg:tracking-widest">
                     Posts
                   </p>
                 </div>
@@ -306,6 +328,7 @@ export const Profile = () => {
         post={selectedPost}
         isOpen={isPostOpen}
         onClose={handleClosePost}
+        handleLike={handleLike}
       />
     </div>
   );

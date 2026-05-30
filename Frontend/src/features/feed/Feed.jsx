@@ -2,14 +2,18 @@ import { useEffect, useState, useRef } from "react";
 import { PostCard } from "../../components/ui/PostCard";
 import { CommentsModal } from "../../components/ui/CommentsModal";
 import { getFeedPosts, createPost } from "../../services/postService";
-import { toggleLike } from "../../services/likeService";
-
 import { errorPageStyles, loadingPageStyles } from "../../styles/classes";
-
-import { useAuth } from "../../context/AuthContext";
+import { usePosts } from "../../hooks/usePosts";
 
 export const Feed = () => {
-  const [posts, setPosts] = useState([]);
+  const {
+    posts,
+    setPosts,
+    addPost,
+    handleLike,
+    handleCommentAdded,
+    handleCommentDeleted,
+  } = usePosts();
 
   const [loading, setLoading] = useState(true);
 
@@ -19,6 +23,7 @@ export const Feed = () => {
   const [posting, setPosting] = useState(false);
 
   const textareaRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const [selectedPostId, setSelectedPostId] = useState(null);
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
@@ -31,48 +36,9 @@ export const Feed = () => {
     setIsCommentsOpen(true);
   };
 
-  const { user } = useAuth();
-
-  const handleCommentAdded = (postId) => {
-    setPosts((prevPosts) =>
-      prevPosts.map((post) => {
-        if (post._id !== postId) return post;
-        return {
-          ...post,
-          commentsCount: (post.commentsCount || 0) + 1,
-        };
-      }),
-    );
-  };
-
-  const handleCommentDeleted = (postId) => {
-    setPosts((prevPosts) =>
-      prevPosts.map((post) => {
-        if (post._id !== postId) return post;
-        return {
-          ...post,
-          commentsCount: (post.commentsCount || 1) - 1,
-        };
-      }),
-    );
-  };
-
-  const handleLike = async (postId) => {
-    try {
-      const data = await toggleLike(postId);
-      setPosts((prevPosts) => {
-        return prevPosts.map((post) => {
-          if (post._id !== postId) return post;
-          return {
-            ...post,
-            isLiked: data.liked,
-            likesCount: data.liked ? post.likesCount + 1 : post.likesCount - 1,
-          };
-        });
-      });
-    } catch (err) {
-      console.error(err);
-    }
+  const closeComments = () => {
+    setIsCommentsOpen(false);
+    setSelectedPostId(null);
   };
 
   const handleChange = (e) => {
@@ -85,7 +51,7 @@ export const Feed = () => {
   };
 
   const handleCreatePost = async () => {
-    if (!content.trim()) return;
+    if (!content.trim() && !selectedImage) return;
     try {
       setPosting(true);
       const normalizedContent = content.replace(/[ \t]+/g, " ").trim();
@@ -98,9 +64,13 @@ export const Feed = () => {
       }
 
       const data = await createPost(formData);
-
-      setPosts((prev) => [data.post, ...prev]);
+      addPost(data.post);
       setContent("");
+      setSelectedImage(null);
+      if (textareaRef.current) {
+        textareaRef.current.style.height = "auto";
+      }
+      fileInputRef.current.value = "";
     } catch (err) {
       console.error(err);
     } finally {
@@ -185,7 +155,7 @@ export const Feed = () => {
           )}
 
           {/* text area */}
-          <div className="shadow-xl' rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-xl backdrop-blur-xl">
             <textarea
               ref={textareaRef}
               value={content}
@@ -199,6 +169,7 @@ export const Feed = () => {
             />
 
             <input
+              ref={fileInputRef}
               type="file"
               accept="image/*"
               onChange={(e) => {
@@ -212,7 +183,7 @@ export const Feed = () => {
 
               <button
                 onClick={handleCreatePost}
-                disabled={posting || !content.trim()}
+                disabled={posting || (!content.trim() && !selectedImage)}
                 className="rounded-xl bg-purple-500 px-5 py-2 font-medium text-white transition hover:bg-purple-600 disabled:opacity-50"
               >
                 {posting ? "Posting..." : "Post"}
@@ -234,7 +205,7 @@ export const Feed = () => {
       <CommentsModal
         post={selectedPost}
         isOpen={isCommentsOpen}
-        onClose={() => setIsCommentsOpen(false)}
+        onClose={closeComments}
         onCommentAdd={handleCommentAdded}
         onCommentDelete={handleCommentDeleted}
       />

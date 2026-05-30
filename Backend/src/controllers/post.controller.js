@@ -11,8 +11,8 @@ import { enrichPost } from "../utils/enrichPosts.js";
 
 const createPostController = asyncHandler(async (req, res) => {
   const { content } = req.body;
-  if (typeof content !== "string" || !content.trim()) {
-    throw new ApiError(400, "Post content is required");
+  if (content && typeof content !== "string") {
+    throw new ApiError(400, "Content type not supported");
   }
 
   let imageUrl = "";
