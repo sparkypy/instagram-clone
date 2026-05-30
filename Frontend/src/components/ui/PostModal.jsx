@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
+import { AiOutlineLike } from "react-icons/ai";
+import { GoCommentDiscussion } from "react-icons/go";
 
 export const PostModal = ({ post, isOpen, onClose }) => {
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
@@ -37,7 +39,7 @@ export const PostModal = ({ post, isOpen, onClose }) => {
       <div className="h-screen w-full bg-[#07010d] lg:h-[80vh] lg:w-[90vw] lg:max-w-6xl lg:rounded-4xl lg:border lg:border-white/10">
         <div className="flex h-full flex-col lg:grid lg:grid-cols-[1fr_380px]">
           <div className="border-r border-white/10 bg-black/20">
-            <div className="flex h-full items-center justify-center p-4 lg:h-full min-h-75">
+            <div className="flex h-full min-h-75 items-center justify-center p-4 lg:h-full">
               {post.image ? (
                 <img
                   src={post.image}
@@ -101,13 +103,47 @@ export const PostModal = ({ post, isOpen, onClose }) => {
             {/* Footer */}
             <div className="border-t border-white/10 p-5">
               <div className="flex items-center gap-4">
-                <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-zinc-300">
-                  ❤️ {post.likesCount}
-                </div>
+                {/* Like Button */}
+                <button
+                  onClick={() => {}}
+                  className={`group relative flex items-center justify-center gap-1.5 overflow-hidden rounded-2xl border px-4 py-3 text-sm font-medium backdrop-blur-xl transition-all duration-300 ${
+                    post.isLiked
+                      ? `border-blue-500/20 bg-blue-500/10 text-blue-200 shadow-[0_0_25px_rgba(59,130,246,0.15)]`
+                      : `border-white/10 bg-white/5 text-zinc-300 hover:border-purple-400/20 hover:bg-purple-500/10 hover:text-purple-200`
+                  } `}
+                >
+                  {/* Glow */}
+                  <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(168,85,247,0.12),transparent_70%)]" />
+                  </div>
 
-                <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-zinc-300">
-                  💬 {post.commentsCount}
-                </div>
+                  <AiOutlineLike
+                    size={22}
+                    className={`relative transition-all duration-300 ${post.isLiked ? "scale-110 fill-blue-400" : ""} `}
+                  />
+
+                  <span className="relative text-base">{post.likesCount}</span>
+                </button>
+
+                {/* Comment Button */}
+                <button
+                  onClick={() => {}}
+                  className="group/comment relative flex items-center justify-center gap-1.5 overflow-hidden rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-zinc-300 backdrop-blur-xl transition-all duration-300 hover:border-fuchsia-400/20 hover:bg-fuchsia-500/10 hover:text-fuchsia-200"
+                >
+                  {/* Glow */}
+                  <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover/comment:opacity-100">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(217,70,239,0.12),transparent_70%)]" />
+                  </div>
+
+                  <GoCommentDiscussion
+                    size={22}
+                    className="relative transition-transform duration-300 group-hover/comment:scale-110"
+                  />
+
+                  <span className="relative text-base">
+                    {post.commentsCount}
+                  </span>
+                </button>
               </div>
             </div>
           </div>

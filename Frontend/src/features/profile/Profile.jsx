@@ -51,7 +51,6 @@ export const Profile = () => {
   };
 
   const handleClosePost = () => {
-    console.log("closing");
     setIsPostOpen(false);
   };
 
