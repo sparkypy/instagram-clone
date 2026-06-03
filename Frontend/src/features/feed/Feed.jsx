@@ -208,6 +208,7 @@ export const Feed = () => {
         onClose={closeComments}
         onCommentAdd={handleCommentAdded}
         onCommentDelete={handleCommentDeleted}
+        handleLike={handleLike}
       />
     </>
   );

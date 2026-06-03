@@ -2,7 +2,7 @@
 node_modules
 Backend/node_modules
 Frontend/node_modules
-
+garbage/
 # env files
 Backend/.env
 Frontend/.env

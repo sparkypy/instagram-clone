@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Trash2, X } from "lucide-react";
+import { AiOutlineLike } from "react-icons/ai";
+import { GoCommentDiscussion } from "react-icons/go";
 
 import {
   createComment,
@@ -15,14 +17,18 @@ export const CommentsModal = ({
   onClose,
   onCommentAdd,
   onCommentDelete,
+  handleLike,
 }) => {
   const { user } = useAuth();
+  const commentInputRef = useRef(null);
 
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [commentInput, setCommentInput] = useState("");
   const [posting, setPosting] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [localLikesCount, setLocalLikesCount] = useState(post?.likesCount || 0);
+  const [localIsLiked, setLocalIsLiked] = useState(post?.isLiked || false);
 
   const handleCreateComment = async () => {
     if (!commentInput.trim()) return;
@@ -31,7 +37,7 @@ export const CommentsModal = ({
       const data = await createComment(post._id, commentInput);
       setComments((prevComments) => [data.comment, ...prevComments]);
       setCommentInput("");
-      onCommentAdd(post._id);
+      onCommentAdd(post._id, data.commentsCount);
     } catch (err) {
       console.error(err);
     } finally {
@@ -41,11 +47,11 @@ export const CommentsModal = ({
 
   const handleDeleteComment = async (commentId) => {
     try {
-      await deleteComment(commentId);
+      const data = await deleteComment(commentId);
       setComments((prevComments) =>
         prevComments.filter((comment) => comment._id !== commentId),
       );
-      onCommentDelete(post._id);
+      onCommentDelete(post._id, data.commentsCount);
     } catch (err) {
       console.error(err);
     }
@@ -66,6 +72,12 @@ export const CommentsModal = ({
     if (!post || !isOpen) return;
     fetchComments();
   }, [post, isOpen]);
+
+  // keep local like state in sync with parent post prop
+  useEffect(() => {
+    setLocalLikesCount(post?.likesCount || 0);
+    setLocalIsLiked(!!post?.isLiked);
+  }, [post]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -159,7 +171,7 @@ export const CommentsModal = ({
                       style={{
                         whiteSpace: "break-spaces",
                       }}
-                      className="max-w-full text-xs leading-relaxed wrap-break-word whitespace-pre-wrap text-zinc-200"
+                      className="max-w-full text-base leading-relaxed wrap-break-word whitespace-pre-wrap text-zinc-200"
                     >
                       {displayContent}
                     </p>
@@ -171,6 +183,56 @@ export const CommentsModal = ({
                         {isExpanded ? "Show Less" : "Expand"}
                       </button>
                     )}
+                  </div>
+
+                  <div className="mt-6 flex flex-wrap items-center gap-3 lg:mt-8">
+                    <button
+                      onClick={async () => {
+                        try {
+                          // optimistic toggle locally
+                          setLocalIsLiked((prev) => {
+                            const newVal = !prev;
+                            setLocalLikesCount((count) =>
+                              newVal
+                                ? (count || 0) + 1
+                                : Math.max(0, (count || 1) - 1),
+                            );
+                            return newVal;
+                          });
+
+                          const data = await handleLike(post._id);
+
+                          if (data && typeof data.likesCount === "number") {
+                            setLocalLikesCount(data.likesCount);
+                            setLocalIsLiked(!!data.liked);
+                          }
+                        } catch (err) {
+                          console.error(err);
+                        }
+                      }}
+                      className={`group relative inline-flex items-center gap-2 rounded-3xl border px-4 py-3 text-sm font-medium transition-all duration-300 ${
+                        localIsLiked
+                          ? "border-blue-500/20 bg-blue-500/10 text-blue-200"
+                          : "border-white/10 bg-white/5 text-zinc-300 hover:border-purple-400/20 hover:bg-purple-500/10 hover:text-purple-200"
+                      }`}
+                    >
+                      <AiOutlineLike
+                        size={18}
+                        className={`transition-transform duration-300 ${localIsLiked ? "scale-110 fill-blue-400" : ""}`}
+                      />
+                      <span>{localLikesCount || 0}</span>
+                    </button>
+
+                    <button
+                      onClick={() => commentInputRef.current?.focus()}
+                      className="group relative inline-flex items-center gap-2 rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-zinc-300 transition-all duration-300 hover:border-fuchsia-400/20 hover:bg-fuchsia-500/10 hover:text-fuchsia-200"
+                    >
+                      <GoCommentDiscussion
+                        size={18}
+                        className="transition-transform duration-300 group-hover:scale-110"
+                      />
+                      <span>{post.commentsCount || 0}</span>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -273,6 +335,7 @@ export const CommentsModal = ({
               <div className="border-t border-white/10 bg-black/20 p-4">
                 <div className="flex gap-3 rounded-3xl border border-white/10 bg-white/3 p-3">
                   <input
+                    ref={commentInputRef}
                     type="text"
                     value={commentInput}
                     onChange={(e) => setCommentInput(e.target.value)}

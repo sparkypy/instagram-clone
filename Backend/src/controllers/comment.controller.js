@@ -33,9 +33,12 @@ const createCommentController = asyncHandler(async (req, res) => {
     "username profileImage",
   );
 
+  const commentsCount = await Comment.countDocuments({ post: postId });
+
   return res.status(201).json({
     success: true,
     comment: populatedComment,
+    commentsCount,
   });
 });
 
@@ -53,9 +56,11 @@ const deleteCommentController = asyncHandler(async (req, res) => {
   }
 
   await comment.deleteOne();
+  const commentsCount = await Comment.countDocuments({ post: comment.post });
   return res.status(200).json({
     success: true,
     message: "Comment deleted successfully",
+    commentsCount,
   });
 });
 

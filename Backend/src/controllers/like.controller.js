@@ -17,15 +17,18 @@ const toggleLikeController = asyncHandler(async (req, res) => {
 
   const existingLike = await Like.findOne({
     user: userId,
-    post: postId
+    post: postId,
   });
 
   if (existingLike) {
     await existingLike.deleteOne();
 
+    const likesCount = await Like.countDocuments({ post: postId });
+
     return res.status(200).json({
       success: true,
       liked: false,
+      likesCount,
     });
   }
 
@@ -33,10 +36,12 @@ const toggleLikeController = asyncHandler(async (req, res) => {
     user: userId,
     post: postId,
   });
+  const likesCount = await Like.countDocuments({ post: postId });
 
   return res.status(200).json({
     success: true,
     liked: true,
+    likesCount,
   });
 });
 

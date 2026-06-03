@@ -4,7 +4,8 @@ import { useAuth } from "../../context/AuthContext";
 import { getUserProfile } from "../../services/userService";
 import { followUser, unfollowUser } from "../../services/followService";
 import { loadingPageStyles, errorPageStyles } from "../../styles/classes";
-import { PostModal } from "../../components/ui/PostModal";
+import { MobilePostModal } from "../../components/ui/MobilePostModal";
+import { CommentsModal } from "../../components/ui/CommentsModal";
 import clsx from "clsx";
 import { toggleLike } from "../../services/likeService";
 
@@ -16,6 +17,7 @@ export const Profile = () => {
   const [posts, setPosts] = useState([]);
   const [selectedPost, setSelectedPost] = useState(null);
   const [isPostOpen, setIsPostOpen] = useState(false);
+  const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [followLoading, setFollowLoading] = useState(false);
@@ -50,7 +52,12 @@ export const Profile = () => {
           return {
             ...post,
             isLiked: data.liked,
-            likesCount: data.liked ? post.likesCount + 1 : post.likesCount - 1,
+            likesCount:
+              typeof data.likesCount === "number"
+                ? data.likesCount
+                : data.liked
+                  ? (post.likesCount || 0) + 1
+                  : Math.max(0, (post.likesCount || 1) - 1),
           };
         }),
       );
@@ -59,21 +66,93 @@ export const Profile = () => {
         setSelectedPost((prev) => ({
           ...prev,
           isLiked: data.liked,
-          likesCount: data.liked ? prev.likesCount + 1 : prev.likesCount - 1,
+          likesCount:
+            typeof data.likesCount === "number"
+              ? data.likesCount
+              : data.liked
+                ? (prev.likesCount || 0) + 1
+                : Math.max(0, (prev.likesCount || 1) - 1),
         }));
       }
+      return data;
     } catch (err) {
       console.error(err);
     }
   };
 
+  const openComments = (post) => {
+    setSelectedPost(post);
+    setIsCommentsOpen(true);
+  };
+
+  const closeComments = () => {
+    setIsCommentsOpen(false);
+  };
+
   const openPost = (post) => {
+    if (window.innerWidth >= 1024) {
+      openComments(post);
+      return;
+    }
+
     setSelectedPost(post);
     setIsPostOpen(true);
   };
 
   const handleClosePost = () => {
     setIsPostOpen(false);
+  };
+
+  const handleCommentAdded = (postId, serverCount) => {
+    setPosts((prev) =>
+      prev.map((post) =>
+        post._id === postId
+          ? {
+              ...post,
+              commentsCount:
+                typeof serverCount === "number"
+                  ? serverCount
+                  : (post.commentsCount || 0) + 1,
+            }
+          : post,
+      ),
+    );
+
+    if (selectedPost?._id === postId) {
+      setSelectedPost((prev) => ({
+        ...prev,
+        commentsCount:
+          typeof serverCount === "number"
+            ? serverCount
+            : (prev?.commentsCount || 0) + 1,
+      }));
+    }
+  };
+
+  const handleCommentDeleted = (postId, serverCount) => {
+    setPosts((prev) =>
+      prev.map((post) =>
+        post._id === postId
+          ? {
+              ...post,
+              commentsCount:
+                typeof serverCount === "number"
+                  ? serverCount
+                  : Math.max(0, (post.commentsCount || 0) - 1),
+            }
+          : post,
+      ),
+    );
+
+    if (selectedPost?._id === postId) {
+      setSelectedPost((prev) => ({
+        ...prev,
+        commentsCount:
+          typeof serverCount === "number"
+            ? serverCount
+            : Math.max(0, (prev?.commentsCount || 1) - 1),
+      }));
+    }
   };
 
   const handleFollowToggle = async () => {
@@ -324,10 +403,19 @@ export const Profile = () => {
           </div>
         </div>
       </div>
-      <PostModal
+      <MobilePostModal
         post={selectedPost}
         isOpen={isPostOpen}
         onClose={handleClosePost}
+        handleLike={handleLike}
+        openComments={openComments}
+      />
+      <CommentsModal
+        post={selectedPost}
+        isOpen={isCommentsOpen}
+        onClose={closeComments}
+        onCommentAdd={handleCommentAdded}
+        onCommentDelete={handleCommentDeleted}
         handleLike={handleLike}
       />
     </div>

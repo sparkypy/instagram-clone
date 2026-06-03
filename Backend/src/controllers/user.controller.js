@@ -42,7 +42,7 @@ const getUserProfileController = asyncHandler(async (req, res) => {
 
   const enrichedPosts = await Promise.all(
     posts.map((post) => {
-      return enrichPost(post, user._id);
+      return enrichPost(post, currentUserId);
     }),
   );
   return res.status(200).json({

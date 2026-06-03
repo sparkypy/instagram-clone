@@ -10,10 +10,14 @@ const enrichPost = async (post, userId) => {
     post: post._id,
   });
 
-  const isLiked = !!(await Like.findOne({
-    user: userId,
-    post: post._id,
-  }));
+  let isLiked = false;
+  if (userId) {
+    const likeExists = await Like.findOne({
+      user: userId,
+      post: post._id,
+    });
+    isLiked = !!likeExists;
+  }
   return {
     ...post.toObject(),
     isLiked,

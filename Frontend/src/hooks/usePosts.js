@@ -14,20 +14,26 @@ export const usePosts = () => {
     );
   };
 
-  const handleCommentAdded = (postId) => {
+  const handleCommentAdded = (postId, serverCount) => {
     updatePost(postId, (post) => {
       return {
         ...post,
-        commentsCount: post.commentsCount + 1,
+        commentsCount:
+          typeof serverCount === "number"
+            ? serverCount
+            : (post.commentsCount || 0) + 1,
       };
     });
   };
 
-  const handleCommentDeleted = (postId) => {
+  const handleCommentDeleted = (postId, serverCount) => {
     updatePost(postId, (post) => {
       return {
         ...post,
-        commentsCount: Math.max(0, post.commentsCount - 1),
+        commentsCount:
+          typeof serverCount === "number"
+            ? serverCount
+            : Math.max(0, (post.commentsCount || 0) - 1),
       };
     });
   };
@@ -40,10 +46,16 @@ export const usePosts = () => {
         return {
           ...post,
           isLiked: data.liked,
-
-          likesCount: data.liked ? post.likesCount + 1 : post.likesCount - 1,
+          // Prefer server-provided count when available to avoid drift
+          likesCount:
+            typeof data.likesCount === "number"
+              ? data.likesCount
+              : data.liked
+                ? (post.likesCount || 0) + 1
+                : Math.max(0, (post.likesCount || 1) - 1),
         };
       });
+      return data;
     } catch (err) {
       console.error(err);
     }
