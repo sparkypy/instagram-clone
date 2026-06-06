@@ -6,11 +6,12 @@ import {
   errorStyles,
 } from "../../styles/classes.js";
 import { validateFields } from "../../utils/validators/fieldValidate.js";
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext, useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext.jsx";
 
 export const Login = () => {
+  const navigate = useNavigate();
   const { login } = useAuth();
   const { showToast } = useOutletContext();
 
@@ -68,6 +69,7 @@ export const Login = () => {
         heading: "Login Successful",
         message: "You're now logged in.",
       });
+      navigate("/feed");
     } catch (error) {
       const message = error?.response?.data?.message || "Something went wrong";
       showToast({
@@ -81,10 +83,10 @@ export const Login = () => {
   };
 
   return (
-    <div className="w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-8 md:p-10 shadow-2xl backdrop-blur-xl">
+    <div className="w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-xl sm:p-8 md:p-10">
       {/* Heading */}
       <div className="mb-8">
-        <h1 className="bg-linear-to-r from-purple-300 to-fuchsia-500 bg-clip-text text-3xl sm:text-4xl font-extrabold text-transparent">
+        <h1 className="bg-linear-to-r from-purple-300 to-fuchsia-500 bg-clip-text text-3xl font-extrabold text-transparent sm:text-4xl">
           Welcome Back!
         </h1>
 

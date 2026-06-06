@@ -26,9 +26,12 @@ export const CommentsModal = ({
   const [loading, setLoading] = useState(true);
   const [commentInput, setCommentInput] = useState("");
   const [posting, setPosting] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
   const [localLikesCount, setLocalLikesCount] = useState(post?.likesCount || 0);
   const [localIsLiked, setLocalIsLiked] = useState(post?.isLiked || false);
+
+  const [isExpanded, setIsExpanded] = useState(false);
+  const contentRef = useRef(null);
+  const [showExpand, setShowExpand] = useState(false);
 
   const handleCreateComment = async () => {
     if (!commentInput.trim()) return;
@@ -113,127 +116,142 @@ export const CommentsModal = ({
     };
   }, [isOpen]);
 
+  useEffect(() => {
+    if (!contentRef.current) return;
+
+    setShowExpand(
+      contentRef.current.scrollHeight > contentRef.current.clientHeight,
+    );
+  }, [post?._id]);
   if (!isOpen || !post) return null;
-
-  const MAX_CONTENT_LENGTH = 180;
-
-  const isLongContent = post.content.length > MAX_CONTENT_LENGTH;
-
-  const displayContent =
-    isExpanded || !isLongContent
-      ? post.content
-      : `${post.content.slice(0, MAX_CONTENT_LENGTH)}...`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md">
       <div className="relative h-screen w-full overflow-hidden border-white/10 bg-[#07010d] lg:h-[90vh] lg:max-h-225 lg:w-[95vw] lg:max-w-6xl lg:rounded-4xl lg:border">
-        <div className="flex h-full flex-col lg:grid lg:grid-cols-[1.35fr_430px]">
+        <div className="flex h-full flex-col lg:grid lg:grid-cols-[2fr_1fr]">
           {/* LEFT SIDE */}
-          <div className="hidden min-w-0 border-r border-purple-500/10 bg-black/20 lg:flex lg:flex-col">
+          <div className="mink-w-0 hidden border-r border-purple-500/10 bg-black/20 lg:flex lg:flex-col">
             <div className="flex h-full min-w-0 flex-col">
               {/* Post Header */}
 
               {/* Content */}
-              <div className="pretty-scrollbar min-w-0 flex-1 overflow-y-auto p-6">
+              <div className="flex h-full min-w-0 flex-col p-6">
                 {post.image && (
-                  <div className="flex h-[50vh] max-h-125 items-center justify-center overflow-hidden rounded-4xl border border-white/10 bg-black/30">
-                    <img
-                      src={post.image}
-                      alt="Post Image"
-                      className="h-full w-full object-contain"
-                    />
+                  <div className="w-full overflow-hidden rounded-4xl border border-white/10 bg-black/30">
+                    <div className="flex h-[32vh] max-h-95 min-h-55 w-full items-center justify-center">
+                      <img
+                        src={post.image}
+                        alt={post.owner?.username || "Post Image"}
+                        className="h-full w-full object-contain"
+                      />
+                    </div>
                   </div>
                 )}
 
-                <div className="mx-auto mt-5 max-w-2xl min-w-0 overflow-hidden rounded-4xl border border-white/10 bg-white/5 p-6">
-                  <div className="flex items-center gap-4">
-                    <img
-                      src={post.owner.profileImage}
-                      alt={post.owner.username}
-                      className="h-12 w-12 rounded-full border border-white/10 object-cover"
-                    />
+                <div
+                  className={`mt-5 flex flex-col overflow-hidden rounded-4xl border border-white/10 bg-white/5 p-4 ${post.image ? "max-h-[40vh]" : "min-h-0 justify-center"}`}
+                >
+                  {/* User Information */}
+                  <div className="shrink-0">
+                    <div className="flex items-center gap-4">
+                      <img
+                        src={post.owner.profileImage}
+                        alt={post.owner.username}
+                        className="h-12 w-12 rounded-full border border-white/10 object-cover"
+                      />
 
-                    <div>
-                      <h2 className="font-semibold text-white">
-                        @{post.owner.username || "not defined"}
-                      </h2>
+                      <div>
+                        <h2 className="font-semibold text-white">
+                          @{post.owner.username || "not defined"}
+                        </h2>
 
-                      <p className="text-sm text-zinc-500">
-                        {new Date(post.createdAt).toLocaleString()}
-                      </p>
+                        <p className="text-sm text-zinc-500">
+                          {new Date(post.createdAt).toLocaleString()}
+                        </p>
+                      </div>
                     </div>
                   </div>
 
-                  <div
-                    className={`mt-5 min-w-0 border-t border-white/10 pt-5 ${isExpanded ? "max-h-[20vh] overflow-y-auto" : ""} `}
-                  >
-                    <p
-                      style={{
-                        whiteSpace: "break-spaces",
-                      }}
-                      className="max-w-full text-base leading-relaxed wrap-break-word whitespace-pre-wrap text-zinc-200"
+                  {/* Caption */}
+                  <div className="mt-5 min-h-0 flex-1 border-t border-white/10 pt-5">
+                    <div
+                      ref={contentRef}
+                      className={`pretty-scrollbar overflow-hidden ${
+                        isExpanded
+                          ? `${post.image ? "max-h-[20vh]" : "max-h-[35vh]"} overflow-y-auto`
+                          : post.image
+                            ? "line-clamp-5"
+                            : "line-clamp-9"
+                      }`}
                     >
-                      {displayContent}
-                    </p>
-                    {isLongContent && (
+                      <p
+                        style={{
+                          whiteSpace: "pre-wrap",
+                        }}
+                        className={`w-full break-all text-zinc-200 ${post.image ? "leading tight text-xs" : "leading relaxed text-sm"}`}
+                      >
+                        {post.content}
+                      </p>
+                    </div>
+
+                    {showExpand && (
                       <button
                         onClick={() => setIsExpanded((prev) => !prev)}
-                        className="mt-3 text-sm text-purple-400 hover:text-purple-300"
+                        className="mt-2 text-xs text-purple-400 hover:text-purple-300"
                       >
                         {isExpanded ? "Show Less" : "Expand"}
                       </button>
                     )}
                   </div>
+                </div>
+                <div className="mt-4 flex shrink-0 items-center gap-3">
+                  <button
+                    onClick={async () => {
+                      try {
+                        // optimistic toggle locally
+                        setLocalIsLiked((prev) => {
+                          const newVal = !prev;
+                          setLocalLikesCount((count) =>
+                            newVal
+                              ? (count || 0) + 1
+                              : Math.max(0, (count || 1) - 1),
+                          );
+                          return newVal;
+                        });
 
-                  <div className="mt-6 flex flex-wrap items-center gap-3 lg:mt-8">
-                    <button
-                      onClick={async () => {
-                        try {
-                          // optimistic toggle locally
-                          setLocalIsLiked((prev) => {
-                            const newVal = !prev;
-                            setLocalLikesCount((count) =>
-                              newVal
-                                ? (count || 0) + 1
-                                : Math.max(0, (count || 1) - 1),
-                            );
-                            return newVal;
-                          });
+                        const data = await handleLike(post._id);
 
-                          const data = await handleLike(post._id);
-
-                          if (data && typeof data.likesCount === "number") {
-                            setLocalLikesCount(data.likesCount);
-                            setLocalIsLiked(!!data.liked);
-                          }
-                        } catch (err) {
-                          console.error(err);
+                        if (data && typeof data.likesCount === "number") {
+                          setLocalLikesCount(data.likesCount);
+                          setLocalIsLiked(!!data.liked);
                         }
-                      }}
-                      className={`group relative inline-flex items-center gap-2 rounded-3xl border px-4 py-3 text-sm font-medium transition-all duration-300 ${
-                        localIsLiked
-                          ? "border-blue-500/20 bg-blue-500/10 text-blue-200"
-                          : "border-white/10 bg-white/5 text-zinc-300 hover:border-purple-400/20 hover:bg-purple-500/10 hover:text-purple-200"
-                      }`}
-                    >
-                      <AiOutlineLike
-                        size={18}
-                        className={`transition-transform duration-300 ${localIsLiked ? "scale-110 fill-blue-400" : ""}`}
-                      />
-                      <span>{localLikesCount || 0}</span>
-                    </button>
+                      } catch (err) {
+                        console.error(err);
+                      }
+                    }}
+                    className={`group relative inline-flex items-center gap-2 rounded-2xl border px-4 py-3 text-sm font-medium transition-all duration-300 ${
+                      localIsLiked
+                        ? "border-blue-500/20 bg-blue-500/10 text-blue-200"
+                        : "border-white/10 bg-white/5 text-zinc-300 hover:border-purple-400/20 hover:bg-purple-500/10 hover:text-purple-200"
+                    }`}
+                  >
+                    <AiOutlineLike
+                      size={21}
+                      className={`transition-transform duration-300 ${localIsLiked ? "scale-110 fill-blue-400" : ""}`}
+                    />
+                    <span>{localLikesCount || 0}</span>
+                  </button>
 
-                    <button
-                      onClick={() => commentInputRef.current?.focus()}
-                      className="group relative inline-flex items-center gap-2 rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-zinc-300 transition-all duration-300 hover:border-fuchsia-400/20 hover:bg-fuchsia-500/10 hover:text-fuchsia-200"
-                    >
-                      <GoCommentDiscussion
-                        size={18}
-                        className="transition-transform duration-300 group-hover:scale-110"
-                      />
-                      <span>{post.commentsCount || 0}</span>
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => commentInputRef.current?.focus()}
+                    className="group relative inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-zinc-300 transition-all duration-300 hover:border-fuchsia-400/20 hover:bg-fuchsia-500/10 hover:text-fuchsia-200"
+                  >
+                    <GoCommentDiscussion
+                      size={21}
+                      className="transition-transform duration-300 group-hover:scale-110"
+                    />
+                    <span>{post.commentsCount || 0}</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -286,14 +304,14 @@ export const CommentsModal = ({
                             />
 
                             {/* Content */}
-                            <div className="min-w-0 flex-1">
+                            <div className="min-w-0 flex-1 lg:w-[20vw] lg:max-w-2xs">
                               <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
                                   <h3 className="text-sm font-semibold text-white">
                                     @{comment.owner.username}
                                   </h3>
 
-                                  <p className="mt-1 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap text-zinc-300">
+                                  <p className="mt-1 w-full text-sm leading-relaxed wrap-break-word whitespace-pre-wrap text-zinc-300">
                                     {comment.content}
                                   </p>
                                 </div>

@@ -6,7 +6,11 @@ export const getFeedPosts = async () => {
 };
 
 export const createPost = async (formData) => {
-  // Let the browser set the correct multipart boundary header for FormData
-  const response = await api.post("/api/posts", formData);
+  const response = await api.post("/api/posts", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
   return response.data;
 };

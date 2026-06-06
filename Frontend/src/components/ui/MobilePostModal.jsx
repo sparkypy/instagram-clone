@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { AiOutlineLike } from "react-icons/ai";
 import { GoCommentDiscussion } from "react-icons/go";
@@ -10,11 +10,14 @@ export const MobilePostModal = ({
   handleLike,
   openComments,
 }) => {
-  const [expandedPost, setExpandedPost] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [showExpand, setShowExpand] = useState(false);
+  const measureRef = useRef(null);
 
   useEffect(() => {
-    setExpandedPost(false);
-  }, [post]);
+    setIsExpanded(false);
+    setShowExpand(false);
+  }, [post?._id]);
 
   useEffect(() => {
     if (isOpen) {
@@ -41,12 +44,19 @@ export const MobilePostModal = ({
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [onClose]);
+  useEffect(() => {
+    if (!measureRef.current) return;
+
+    const styles = window.getComputedStyle(measureRef.current);
+
+    const lineHeight = parseFloat(styles.lineHeight);
+
+    const lines = Math.round(measureRef.current.scrollHeight / lineHeight);
+
+    setShowExpand(lines > 5);
+  }, [post?.content, isOpen]);
 
   if (!post || !isOpen) return null;
-  const shouldShowExpand = post.content?.length > 180;
-  const displayContent = expandedPost
-    ? post.content
-    : `${post.content.slice(0, 180)}${shouldShowExpand ? "..." : ""}`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md">
@@ -94,51 +104,55 @@ export const MobilePostModal = ({
                     className="max-h-[45vh] min-h-[25vh] w-full object-contain"
                   />
                   <div className="absolute right-0 bottom-0 left-0 bg-linear-to-t from-black/90 via-black/60 to-transparent p-4">
+                    l
                     <div
-                      className={`border-t border-white/10 bg-black/40 transition-all duration-300 ${
-                        expandedPost
-                          ? "max-h-30 overflow-y-auto"
-                          : "max-h-16 overflow-hidden"
+                      className={`pretty-scrollbar border-wkhite/10 border-t bg-black/40 p-1.5 transition-all duration-300 ${
+                        isExpanded
+                          ? "max-h-32 overflow-y-auto"
+                          : "max-h-12 overflow-hidden"
                       } `}
                     >
                       <p
+                        ref={measureRef}
                         style={{
-                          whiteSpace: "break-spaces",
-                          overflowWrap: "anywhere",
+                          whiteSpace: "pre-wrap",
                         }}
-                        className={`text-sm text-white transition-all duration-300 ${expandedPost ? "" : "line-clamp-2"} `}
+                        className={`text-xs wrap-break-word whitespace-pre-wrap text-white ${
+                          isExpanded ? "" : "line-clamp-2"
+                        } `}
                       >
                         {post.content}
                       </p>
                     </div>
-                    {shouldShowExpand && (
+                    {showExpand && (
                       <button
-                        onClick={() => setExpandedPost((prev) => !prev)}
+                        onClick={() => setIsExpanded((prev) => !prev)}
                         className="mt-2 text-xs font-medium text-purple-300"
                       >
-                        {expandedPost ? "Show less" : "More"}
+                        {isExpanded ? "Show less" : "More"}
                       </button>
                     )}
                   </div>
                 </div>
               ) : (
                 <div
-                  className={`rounded-3xl border border-white/10 bg-white/5 p-6 transition-all duration-300 ${
-                    expandedPost ? "" : "max-h-[25vh] overflow-hidden"
+                  className={`pretty-scrollbar rounded-3xl border border-white/10 bg-white/5 p-6 transition-all duration-300  ${
+                    isExpanded ? "overflow-y-auto" : "max-h-[25vh] overflow-hidden"
                   } `}
                 >
                   <p
-                    style={{ whiteSpace: "break-spaces" }}
-                    className={`text-center text-base leading-relaxed wrap-break-word whitespace-pre-wrap text-zinc-200 ${expandedPost ? "" : "line-clamp-4"} `}
+                    ref={measureRef}
+                    sltyle={{ whiteSpace: "break-spaces" }}
+                    className={`text-center text-base leading-relaxed wrap-break-word whitespace-pre-wrap text-zinc-200 ${isExpanded ? "" : "line-clamp-4"} `}
                   >
                     {post.content}
                   </p>
-                  {post.content.length > 180 && (
+                  {showExpand && (
                     <button
-                      onClick={() => setExpandedPost((prev) => !prev)}
+                      onClick={() => setIsExpanded((prev) => !prev)}
                       className="mt-4 text-sm text-purple-400 hover:text-purple-300"
                     >
-                      {expandedPost ? "Show less" : "...click to expand"}
+                      {isExpanded ? "Show less" : "...click to expand"}
                     </button>
                   )}
                 </div>
