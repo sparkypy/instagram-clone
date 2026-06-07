@@ -51,9 +51,9 @@ export const MobilePostModal = ({
 
     const lineHeight = parseFloat(styles.lineHeight);
 
-    const lines = Math.round(measureRef.current.scrollHeight / lineHeight);
+    const totalLines = Math.ceil(measureRef.current.scrollHeight / lineHeight);
 
-    setShowExpand(lines > 5);
+    setShowExpand(totalLines > 2);
   }, [post?.content, isOpen]);
 
   if (!post || !isOpen) return null;
@@ -104,16 +104,14 @@ export const MobilePostModal = ({
                     className="max-h-[45vh] min-h-[25vh] w-full object-contain"
                   />
                   <div className="absolute right-0 bottom-0 left-0 bg-linear-to-t from-black/90 via-black/60 to-transparent p-4">
-                    l
                     <div
-                      className={`pretty-scrollbar border-wkhite/10 border-t bg-black/40 p-1.5 transition-all duration-300 ${
+                      className={`pretty-scrollbar border-t border-white/10 bg-black/40 p-1.5 transition-all duration-300 ${
                         isExpanded
                           ? "max-h-32 overflow-y-auto"
                           : "max-h-12 overflow-hidden"
                       } `}
                     >
                       <p
-                        ref={measureRef}
                         style={{
                           whiteSpace: "pre-wrap",
                         }}
@@ -136,21 +134,23 @@ export const MobilePostModal = ({
                 </div>
               ) : (
                 <div
-                  className={`pretty-scrollbar rounded-3xl border border-white/10 bg-white/5 p-6 transition-all duration-300  ${
-                    isExpanded ? "overflow-y-auto" : "max-h-[25vh] overflow-hidden"
+                  className={`pretty-scrollbar rounded-3xl border border-white/10 bg-white/5 px-6 py-4 transition-all duration-300 ${
+                    isExpanded
+                      ? "overflow-y-auto max-h-[40vh]"
+                      : "max-h-[30vh] overflow-hidden"
                   } `}
                 >
                   <p
                     ref={measureRef}
-                    sltyle={{ whiteSpace: "break-spaces" }}
-                    className={`text-center text-base leading-relaxed wrap-break-word whitespace-pre-wrap text-zinc-200 ${isExpanded ? "" : "line-clamp-4"} `}
+                    style={{ whiteSpace: "break-spaces" }}
+                    className={`text-center text-base leading-relaxed wrap-break-word whitespace-pre-wrap text-zinc-200 ${isExpanded ? "" : "line-clamp-5"} `}
                   >
                     {post.content}
                   </p>
                   {showExpand && (
                     <button
                       onClick={() => setIsExpanded((prev) => !prev)}
-                      className="mt-4 text-sm text-purple-400 hover:text-purple-300"
+                      className="mt-1 text-xs text-purple-400 hover:text-purple-300"
                     >
                       {isExpanded ? "Show less" : "...click to expand"}
                     </button>
@@ -208,6 +208,17 @@ export const MobilePostModal = ({
             </div>
           </div>
         </div>
+      </div>
+      <div className="pointer-events-none invisible absolute -z-10 w-[80%]">
+        <p
+          ref={measureRef}
+          style={{
+            whiteSpace: "pre-wrap",
+          }}
+          className="text-xs wrap-break-word whitespace-pre-wrap"
+        >
+          {post.content}
+        </p>
       </div>
     </div>
   );
