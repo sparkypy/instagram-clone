@@ -130,7 +130,7 @@ export const CommentsModal = ({
       <div className="relative h-screen w-full overflow-hidden border-white/10 bg-[#07010d] lg:h-[90vh] lg:max-h-225 lg:w-[95vw] lg:max-w-6xl lg:rounded-4xl lg:border">
         <div className="flex h-full flex-col lg:grid lg:grid-cols-[2fr_1fr]">
           {/* LEFT SIDE */}
-          <div className="mink-w-0 hidden border-r border-purple-500/10 bg-black/20 lg:flex lg:flex-col">
+          <div className="min-w-0 hidden border-r border-purple-500/10 bg-black/20 lg:flex lg:flex-col">
             <div className="flex h-full min-w-0 flex-col">
               {/* Post Header */}
 
@@ -250,7 +250,7 @@ export const CommentsModal = ({
                       size={21}
                       className="transition-transform duration-300 group-hover:scale-110"
                     />
-                    <span>{post.commentsCount || 0}</span>
+                    <span>{comments.length || 0}</span>
                   </button>
                 </div>
               </div>
